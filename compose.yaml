@@ -1,0 +1,9 @@
+services:
+  api:
+    build: .
+    environment:
+      FINVOICE_ENVIRONMENT: local
+      FINVOICE_LOG_LEVEL: INFO
+      FINVOICE_MINIMUM_RESPONSE_CONFIDENCE: "0.70"
+    ports:
+      - "8000:8000"
