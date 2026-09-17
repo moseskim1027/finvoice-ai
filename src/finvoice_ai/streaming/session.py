@@ -48,6 +48,7 @@ class StreamingSession:
     last_activity_at: float = field(init=False)
     utterance_id: str | None = None
     active_response_id: str | None = None
+    _cancel_active_response: Callable[[], None] | None = None
     _response_generation: int = 0
     _seen_sequences: set[int] = field(default_factory=set)
     _next_sequence: int = 0
@@ -142,13 +143,18 @@ class StreamingSession:
 
         return events
 
-    def start_response(self, response_id: str) -> int:
+    def start_response(
+        self,
+        response_id: str,
+        cancel: Callable[[], None] | None = None,
+    ) -> int:
         if self.phase not in {SessionPhase.FINALIZING, SessionPhase.RESPONDING}:
             raise ValueError(f"cannot start a response while session is {self.phase}")
         if not response_id:
             raise ValueError("response_id must not be empty")
         self.phase = SessionPhase.RESPONDING
         self.active_response_id = response_id
+        self._cancel_active_response = cancel
         self._response_generation += 1
         return self._response_generation
 
@@ -156,6 +162,7 @@ class StreamingSession:
         if response_id != self.active_response_id or generation != self._response_generation:
             return False
         self.active_response_id = None
+        self._cancel_active_response = None
         self.phase = SessionPhase.IDLE
         return True
 
@@ -239,8 +246,12 @@ class StreamingSession:
         if self.active_response_id is None:
             return []
         response_id = self.active_response_id
+        cancel = self._cancel_active_response
         self.active_response_id = None
+        self._cancel_active_response = None
         self._response_generation += 1
+        if cancel is not None:
+            cancel()
         self._observe("interruption_latency_ms", 0.0)
         return [InterruptedEvent(self.session_id, utterance_id, response_id, now)]
 

@@ -158,11 +158,12 @@ def test_buffer_limit_is_enforced() -> None:
 
 def test_barge_in_cancels_active_response_once_and_late_completion_is_ignored() -> None:
     session = StreamingSession("session-1", StubTranscriber(), config())
+    cancellations: list[str] = []
     for sequence in range(3):
         session.accept(chunk(sequence, 1_000))
     for sequence in range(3, 6):
         session.accept(chunk(sequence, 0))
-    generation = session.start_response("response-1")
+    generation = session.start_response("response-1", lambda: cancellations.append("cancelled"))
 
     events = []
     for sequence in range(3):
@@ -172,6 +173,7 @@ def test_barge_in_cancels_active_response_once_and_late_completion_is_ignored() 
     events.extend(session.accept(chunk(3, 1_000, utterance_id="utterance-2")))
 
     assert event_types(events).count("interrupted") == 1
+    assert cancellations == ["cancelled"]
     assert session.complete_response("response-1", generation) is False
 
 
