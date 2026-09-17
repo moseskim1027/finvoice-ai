@@ -36,9 +36,14 @@ def test_manifest_rejects_duplicate_ids_and_unsafe_paths() -> None:
         "language_mode": "monolingual",
         "noise_condition": "clean",
         "device": "phone",
+        "utterance_type": "short-command",
+        "intent_id": "pin_reset",
         "speaker_id": "speaker-a",
         "consent_basis": "explicit-consent",
         "license": "CC-BY-4.0",
+        "provenance": "consented local collection",
+        "collection_method": "recorded in a quiet room",
+        "audio_sha256": "0" * 64,
         "split": "test",
     }
 
@@ -46,6 +51,8 @@ def test_manifest_rejects_duplicate_ids_and_unsafe_paths() -> None:
         SpeechEvaluationManifest(
             dataset_name="test",
             version="1",
+            taxonomy_version="1.0.0",
+            transform_version="1.0.0",
             data_statement="test data",
             cases=[case, case],
         )
@@ -57,3 +64,18 @@ def test_manifest_schema_can_be_exported(tmp_path: Path) -> None:
     write_manifest_schema(output)
 
     assert '"SpeechEvaluationManifest"' in output.read_text(encoding="utf-8")
+
+
+def test_manifest_rejects_speaker_leakage_between_splits() -> None:
+    manifest = load_speech_manifest(EXAMPLE_MANIFEST)
+    leaking = manifest.cases[1].model_copy(update={"speaker_id": manifest.cases[0].speaker_id})
+
+    with pytest.raises(ValidationError, match="speaker IDs must not cross"):
+        SpeechEvaluationManifest(
+            dataset_name=manifest.dataset_name,
+            version=manifest.version,
+            taxonomy_version=manifest.taxonomy_version,
+            transform_version=manifest.transform_version,
+            data_statement=manifest.data_statement,
+            cases=[manifest.cases[0], leaking],
+        )

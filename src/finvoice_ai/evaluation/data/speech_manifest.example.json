@@ -1,6 +1,8 @@
 {
   "dataset_name": "finvoice-synthetic-speech-eval",
   "version": "0.1.0",
+  "taxonomy_version": "1.0.0",
+  "transform_version": "1.0.0",
   "data_statement": "Synthetic examples only. Replace audio placeholders with consented or appropriately licensed recordings and retain provenance before evaluation.",
   "cases": [
     {
@@ -11,9 +13,14 @@
       "language_mode": "monolingual",
       "noise_condition": "clean",
       "device": "studio-synthetic",
+      "utterance_type": "short-command",
+      "intent_id": "pin_reset",
       "speaker_id": "synthetic-voice-a",
       "consent_basis": "synthetic-generated",
       "license": "project-generated-placeholder",
+      "provenance": "Locally generated placeholder; no recording is published",
+      "collection_method": "deterministic synthetic generation",
+      "audio_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "split": "development"
     },
     {
@@ -24,9 +31,14 @@
       "language_mode": "code-switched",
       "noise_condition": "synthetic-cafe-noise",
       "device": "phone-synthetic",
+      "utterance_type": "conversational-request",
+      "intent_id": "pin_reset",
       "speaker_id": "synthetic-voice-b",
       "consent_basis": "synthetic-generated",
       "license": "project-generated-placeholder",
+      "provenance": "Locally generated placeholder; no recording is published",
+      "collection_method": "deterministic synthetic generation and cafe-noise transform",
+      "audio_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "split": "test"
     }
   ]
