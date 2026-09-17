@@ -1,0 +1,33 @@
+{
+  "dataset_name": "finvoice-synthetic-speech-eval",
+  "version": "0.1.0",
+  "data_statement": "Synthetic examples only. Replace audio placeholders with consented or appropriately licensed recordings and retain provenance before evaluation.",
+  "cases": [
+    {
+      "case_id": "en-clean-001",
+      "audio_path": "audio/en-clean-001.wav",
+      "reference_transcript": "I need to reset my PIN",
+      "language": "en",
+      "language_mode": "monolingual",
+      "noise_condition": "clean",
+      "device": "studio-synthetic",
+      "speaker_id": "synthetic-voice-a",
+      "consent_basis": "synthetic-generated",
+      "license": "project-generated-placeholder",
+      "split": "development"
+    },
+    {
+      "case_id": "en-fil-noisy-001",
+      "audio_path": "audio/en-fil-noisy-001.wav",
+      "reference_transcript": "Please help, hindi ko ma-reset ang PIN ko",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "noise_condition": "synthetic-cafe-noise",
+      "device": "phone-synthetic",
+      "speaker_id": "synthetic-voice-b",
+      "consent_basis": "synthetic-generated",
+      "license": "project-generated-placeholder",
+      "split": "test"
+    }
+  ]
+}
