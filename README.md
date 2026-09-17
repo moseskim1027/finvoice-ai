@@ -67,7 +67,9 @@ service, typed ports for retrieval, generation, safety policy, and conversation
 storage, a repository-controlled Markdown knowledge base, deterministic BM25
 retrieval, auditable response metadata, citation validation, and safe escalation
 for missing context or unavailable providers. Real model providers, vector
-retrieval, speech services, MCP tools, and telemetry remain future milestones.
+retrieval, speech services, and telemetry remain future milestones. A standalone
+MCP server now exposes synthetic demo tools through the official stable
+[MCP Python SDK](https://py.sdk.modelcontextprotocol.io/).
 
 ## Current orchestration boundary
 
@@ -153,6 +155,67 @@ mean reciprocal rank `1.0`. These numbers only verify the tiny baseline corpus;
 they are not evidence of production retrieval quality. The dataset must grow
 with paraphrases, ambiguous questions, hard negatives, multilingual queries,
 and policy-version conflicts before comparing production candidates.
+
+## MCP tool gateway
+
+The MCP server demonstrates protocol integration without granting an LLM direct
+access to repositories, credentials, or real financial systems.
+
+```text
+[MCP host / model]
+        |
+        v
+[Official MCP server]
+ typed schemas / stdio transport
+        |
+        v
+[Tool gateway]
+ fixed registry / unknown-tool rejection
+        |
+        v
+[Authorization policy]
+ authenticated principal
+ required scopes
+ explicit confirmation for side effects
+        |
+   +----+----------------+
+   |                     |
+ denied              authorized
+   |                     |
+   v                     v
+[audit event]      [synthetic handler]
+                         |
+                         v
+                    [audit event]
+```
+
+Two tools are exposed:
+
+- `get_demo_account_status`: read-only, requires `accounts:read`, and accepts
+  identifiers matching `DEMO-[0-9]{3}` only;
+- `create_demo_support_ticket`: synthetic side effect, requires
+  `tickets:write` and explicit confirmation.
+
+Run the stdio MCP server with:
+
+```bash
+make run-mcp
+```
+
+Security properties in the current implementation:
+
+- callers cannot self-grant scopes or confirmation through tool arguments;
+- tool names come from a fixed registry;
+- only synthetic demo identifiers and records are accepted;
+- audit events record argument names, never argument values;
+- successful results include an audit ID;
+- denied and failed calls are also recorded.
+
+The current wrapper uses a fixed synthetic demo principal because no real
+identity provider exists in this portfolio environment. This is not production
+authentication. A deployed version must derive identity and scopes from a
+verified token, bind confirmation to the initiating user and exact action, use
+durable append-only audit storage, and apply rate limits and replay protection.
 
 ## Research pipeline
 
@@ -262,7 +325,9 @@ finvoice-ai/
 |   |-- application/     # Orchestration service and provider ports
 |   |-- domain/          # Request models and deterministic policy
 |   |-- evaluation/      # Retrieval benchmark and versioned cases
-|   `-- infrastructure/  # Local provider implementations
+|   |-- infrastructure/  # Local provider implementations
+|   |-- tools/           # Tool policy, gateway, handlers, and audit models
+|   `-- mcp_server.py    # Official SDK protocol adapter
 |-- tests/
 |   `-- scenarios/       # Versioned conversation behavior cases
 |-- .env.example         # Safe local configuration template

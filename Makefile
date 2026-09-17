@@ -1,4 +1,4 @@
-.PHONY: evaluate-retrieval format lint run test
+.PHONY: evaluate-retrieval format lint run run-mcp test
 
 evaluate-retrieval:
 	python -m finvoice_ai.evaluation.retrieval
@@ -13,6 +13,9 @@ lint:
 
 run:
 	uvicorn finvoice_ai.main:app --reload
+
+run-mcp:
+	python -m finvoice_ai.mcp_server
 
 test:
 	pytest
