@@ -33,9 +33,14 @@ def make_case(case_id: str, audio_path: str, split: str = "development") -> Spee
         language_mode="monolingual",
         noise_condition="clean",
         device="phone",
+        utterance_type="short-command",
+        intent_id="pin_reset",
         speaker_id=f"speaker-{case_id}",
         consent_basis="synthetic-generated",
         license="project-generated",
+        provenance="test fixture",
+        collection_method="test fixture",
+        audio_sha256="0" * 64,
         split=split,
     )
 
@@ -44,6 +49,8 @@ def make_manifest(cases: list[SpeechEvaluationCase]) -> SpeechEvaluationManifest
     return SpeechEvaluationManifest(
         dataset_name="fixture",
         version="1.0",
+        taxonomy_version="1.0.0",
+        transform_version="1.0.0",
         data_statement="synthetic fixture",
         cases=cases,
     )
@@ -87,6 +94,8 @@ def test_runner_reports_accuracy_latency_and_missing_files(tmp_path: Path) -> No
     assert report.cases[1].word_error_rate == 1.0
     assert report.cases[1].real_time_factor == 0.0
     assert report.cases[0].model_dump()["word_error_rate"] == 0.5
+    assert report.cases[0].confidence == 0.8
+    assert report.cases[0].intent_id == "pin_reset"
 
 
 def test_runner_records_provider_error_and_continues(tmp_path: Path) -> None:

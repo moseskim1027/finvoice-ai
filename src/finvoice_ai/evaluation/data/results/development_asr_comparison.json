@@ -1,0 +1,61 @@
+{
+  "baseline": {
+    "case_count": 45,
+    "character_error_rate": 0.5322376738305942,
+    "expected_calibration_error": 0.3823350673217884,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "language_identification_accuracy": 0.6444444444444445,
+    "latency_p50_ms": 850.9407919996193,
+    "latency_p95_ms": 5891.666874999828,
+    "macro_character_error_rate": 0.5360686408800477,
+    "macro_word_error_rate": 1.0211552028218696,
+    "mean_real_time_factor": 0.5093824078852338,
+    "word_error_rate": 1.0117994100294985
+  },
+  "baseline_model": "faster-whisper/tiny",
+  "bootstrap_samples": 2000,
+  "bootstrap_seed": 20260918,
+  "candidate": {
+    "case_count": 45,
+    "character_error_rate": 0.41466498103666244,
+    "expected_calibration_error": 0.37919327918035567,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "language_identification_accuracy": 0.6666666666666666,
+    "latency_p50_ms": 710.2352500000961,
+    "latency_p95_ms": 4850.951833000181,
+    "macro_character_error_rate": 0.4156956424364822,
+    "macro_word_error_rate": 0.7973280423280423,
+    "mean_real_time_factor": 0.48881456134730067,
+    "word_error_rate": 0.7935103244837758
+  },
+  "candidate_model": "faster-whisper/base",
+  "case_count": 45,
+  "character_error_rate_delta_bootstrap_95_ci": [
+    -0.1895197274495626,
+    -0.053073684518909134
+  ],
+  "dataset_name": "finvoice-local-synthetic-bilingual-v1",
+  "dataset_version": "1.0.0",
+  "environment": {
+    "machine": "arm64",
+    "manifest_sha256": "db715da471a0a8dccce6da7589d14ad42366751bb0bd855334f44050cda7110a",
+    "packages": {
+      "ctranslate2": "4.8.2",
+      "faster-whisper": "1.2.1",
+      "finvoice-ai": "0.1.0",
+      "numpy": "2.4.6"
+    },
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "processor": "arm",
+    "python": "3.11.0 (v3.11.0:deaf509e8f, Oct 24 2022, 14:43:23) [Clang 13.0.0 (clang-1300.0.29.30)]"
+  },
+  "evaluation_split": "development",
+  "paired_mean_character_error_rate_delta": -0.12037299844356561,
+  "paired_mean_word_error_rate_delta": -0.22382716049382714,
+  "word_error_rate_delta_bootstrap_95_ci": [
+    -0.3772422639089307,
+    -0.07914221580888248
+  ]
+}

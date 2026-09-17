@@ -387,6 +387,12 @@ contributes an empty-hypothesis error rate, and makes the command exit nonzero.
 The runner reports descriptive measurements; it does not claim statistical
 significance or calibrated confidence.
 
+The governed 60-case local synthetic benchmark workflow, safe aggregate
+Faster Whisper results, and strong limitations are documented in the
+[bilingual ASR baseline](docs/bilingual-asr-baseline.md). The committed results
+demonstrate reproducibility and expose an English-synthetic-voice mismatch;
+they are not claims about Filipino speakers or real support calls.
+
 ## Streaming conversation mechanics
 
 The WebSocket endpoint at `/v1/audio/stream/{session_id}` demonstrates bounded,

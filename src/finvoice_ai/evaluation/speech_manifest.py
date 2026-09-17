@@ -13,9 +13,20 @@ class SpeechEvaluationCase(BaseModel):
     language_mode: Literal["monolingual", "code-switched"]
     noise_condition: str = Field(min_length=1)
     device: str = Field(min_length=1)
+    utterance_type: Literal["short-command", "conversational-request"]
+    intent_id: Literal[
+        "pin_reset",
+        "statement_access",
+        "card_security",
+        "money_transfer",
+        "unrelated_request",
+    ]
     speaker_id: str = Field(min_length=1)
     consent_basis: str = Field(min_length=1)
     license: str = Field(min_length=1)
+    provenance: str = Field(min_length=1)
+    collection_method: str = Field(min_length=1)
+    audio_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     split: Literal["development", "test"]
 
     @model_validator(mode="after")
@@ -28,6 +39,8 @@ class SpeechEvaluationCase(BaseModel):
 class SpeechEvaluationManifest(BaseModel):
     dataset_name: str = Field(min_length=1)
     version: str = Field(min_length=1)
+    taxonomy_version: str = Field(min_length=1)
+    transform_version: str = Field(min_length=1)
     data_statement: str = Field(min_length=1)
     cases: list[SpeechEvaluationCase] = Field(min_length=1)
 
@@ -36,6 +49,17 @@ class SpeechEvaluationManifest(BaseModel):
         case_ids = [case.case_id for case in self.cases]
         if len(case_ids) != len(set(case_ids)):
             raise ValueError("case_id values must be unique")
+        speaker_splits: dict[str, set[str]] = {}
+        for case in self.cases:
+            speaker_splits.setdefault(case.speaker_id, set()).add(case.split)
+        leaking_speakers = sorted(
+            speaker for speaker, splits in speaker_splits.items() if len(splits) > 1
+        )
+        if leaking_speakers:
+            raise ValueError(
+                "speaker IDs must not cross development and test splits: "
+                + ", ".join(leaking_speakers)
+            )
         return self
 
 
