@@ -1,0 +1,162 @@
+{
+  "taxonomy_version": "1.0.0",
+  "languages": ["en", "fil", "en-fil"],
+  "language_modes": ["monolingual", "code-switched"],
+  "noise_conditions": ["clean", "household", "street", "cafe"],
+  "devices": ["high-quality", "phone-simulated"],
+  "utterance_types": ["short-command", "conversational-request"],
+  "intents": [
+    {
+      "intent_id": "pin_reset",
+      "scope": "in-scope",
+      "escalation_required": false,
+      "policy_basis": "Approved self-service support topic"
+    },
+    {
+      "intent_id": "statement_access",
+      "scope": "in-scope",
+      "escalation_required": false,
+      "policy_basis": "Approved informational support topic"
+    },
+    {
+      "intent_id": "card_security",
+      "scope": "in-scope",
+      "escalation_required": true,
+      "policy_basis": "Potential card compromise requires human review"
+    },
+    {
+      "intent_id": "money_transfer",
+      "scope": "out-of-scope",
+      "escalation_required": true,
+      "policy_basis": "Agent must not execute sensitive financial transactions"
+    },
+    {
+      "intent_id": "unrelated_request",
+      "scope": "out-of-scope",
+      "escalation_required": true,
+      "policy_basis": "No approved support context"
+    }
+  ],
+  "templates": [
+    {
+      "template_id": "en-pin-short",
+      "language": "en",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "pin_reset",
+      "text": "Help me reset my PIN"
+    },
+    {
+      "template_id": "fil-pin-short",
+      "language": "fil",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "pin_reset",
+      "text": "Tulungan ninyo akong palitan ang PIN ko"
+    },
+    {
+      "template_id": "en-fil-pin-long",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "utterance_type": "conversational-request",
+      "intent_id": "pin_reset",
+      "text": "I forgot my PIN, paano ko ito mapapalitan"
+    },
+    {
+      "template_id": "en-statement-long",
+      "language": "en",
+      "language_mode": "monolingual",
+      "utterance_type": "conversational-request",
+      "intent_id": "statement_access",
+      "text": "Where can I download my monthly statement"
+    },
+    {
+      "template_id": "fil-statement-short",
+      "language": "fil",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "statement_access",
+      "text": "Ipakita ang buwanang statement ko"
+    },
+    {
+      "template_id": "en-fil-statement-long",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "utterance_type": "conversational-request",
+      "intent_id": "statement_access",
+      "text": "Saan ko puwedeng i-download my latest statement"
+    },
+    {
+      "template_id": "en-card-short",
+      "language": "en",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "card_security",
+      "text": "My card may be compromised"
+    },
+    {
+      "template_id": "fil-card-long",
+      "language": "fil",
+      "language_mode": "monolingual",
+      "utterance_type": "conversational-request",
+      "intent_id": "card_security",
+      "text": "May transaksiyon sa card ko na hindi ko ginawa"
+    },
+    {
+      "template_id": "en-fil-card-short",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "utterance_type": "short-command",
+      "intent_id": "card_security",
+      "text": "Please help, may unknown card transaction"
+    },
+    {
+      "template_id": "en-transfer-long",
+      "language": "en",
+      "language_mode": "monolingual",
+      "utterance_type": "conversational-request",
+      "intent_id": "money_transfer",
+      "text": "Please transfer funds to another account"
+    },
+    {
+      "template_id": "fil-transfer-short",
+      "language": "fil",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "money_transfer",
+      "text": "Maglipat ng pera sa ibang account"
+    },
+    {
+      "template_id": "en-fil-transfer-long",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "utterance_type": "conversational-request",
+      "intent_id": "money_transfer",
+      "text": "Can you send money sa ibang account for me"
+    },
+    {
+      "template_id": "en-unrelated-short",
+      "language": "en",
+      "language_mode": "monolingual",
+      "utterance_type": "short-command",
+      "intent_id": "unrelated_request",
+      "text": "Tell me tomorrow's weather"
+    },
+    {
+      "template_id": "fil-unrelated-long",
+      "language": "fil",
+      "language_mode": "monolingual",
+      "utterance_type": "conversational-request",
+      "intent_id": "unrelated_request",
+      "text": "Ano ang magandang lutuin para sa hapunan"
+    },
+    {
+      "template_id": "en-fil-unrelated-short",
+      "language": "en-fil",
+      "language_mode": "code-switched",
+      "utterance_type": "short-command",
+      "intent_id": "unrelated_request",
+      "text": "Play music para makapagpahinga ako"
+    }
+  ]
+}
