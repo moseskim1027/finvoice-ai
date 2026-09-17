@@ -10,6 +10,7 @@ from finvoice_ai.evaluation.audio_transforms import (
     mix_noise,
     normalize_peak,
     resample_linear,
+    simulate_phone_channel,
     transform_audio,
 )
 from finvoice_ai.speech.models import AudioBuffer
@@ -47,6 +48,16 @@ def test_seeded_noise_mix_is_repeatable_and_bounded() -> None:
 
     assert first == second
     assert all(-32_768 <= sample <= 32_767 for sample in first.samples)
+
+
+def test_phone_simulation_preserves_rate_and_duration() -> None:
+    audio = AudioBuffer(16_000, (10_000, -10_000) * 80)
+
+    result = simulate_phone_channel(audio)
+
+    assert result.sample_rate_hz == 16_000
+    assert len(result.samples) == len(audio.samples)
+    assert result.samples != audio.samples
 
 
 def test_transform_requires_noise_when_snr_is_configured() -> None:

@@ -20,6 +20,7 @@ class AudioTransformConfig:
     sample_rate_hz: int = 16_000
     peak_dbfs: float = -3.0
     noise_snr_db: float | None = None
+    phone_simulated: bool = False
     seed: int = 17
 
 
@@ -30,12 +31,21 @@ def transform_audio(
 ) -> AudioBuffer:
     transformed = resample_linear(speech, config.sample_rate_hz)
     transformed = normalize_peak(transformed, config.peak_dbfs)
+    if config.phone_simulated:
+        transformed = simulate_phone_channel(transformed)
     if config.noise_snr_db is not None:
         if noise is None:
             raise ValueError("noise audio is required when noise_snr_db is set")
         prepared_noise = resample_linear(noise, config.sample_rate_hz)
         transformed = mix_noise(transformed, prepared_noise, config.noise_snr_db, config.seed)
     return transformed
+
+
+def simulate_phone_channel(audio: AudioBuffer) -> AudioBuffer:
+    """Apply deterministic 8 kHz round-trip resampling as a phone-like proxy."""
+    original_rate = audio.sample_rate_hz
+    narrowband_rate = min(8_000, original_rate)
+    return resample_linear(resample_linear(audio, narrowband_rate), original_rate)
 
 
 def resample_linear(audio: AudioBuffer, target_sample_rate_hz: int) -> AudioBuffer:
@@ -121,6 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--peak-dbfs", type=float, default=-3.0)
     parser.add_argument("--noise", type=Path)
     parser.add_argument("--noise-snr-db", type=float)
+    parser.add_argument("--phone-simulated", action="store_true")
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--ledger", type=Path)
     return parser
@@ -135,6 +146,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sample_rate_hz=args.sample_rate,
         peak_dbfs=args.peak_dbfs,
         noise_snr_db=args.noise_snr_db,
+        phone_simulated=args.phone_simulated,
         seed=args.seed,
     )
     output = transform_audio(source, config, noise)
