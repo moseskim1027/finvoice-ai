@@ -1,0 +1,57 @@
+[
+  {
+    "name": "grounded_pin_reset",
+    "request": {
+      "session_id": "scenario-pin",
+      "message": "How do I reset my PIN?",
+      "confidence": 0.95
+    },
+    "expected_decision": "respond",
+    "expected_reason": null,
+    "expected_citation": "help-pin-reset"
+  },
+  {
+    "name": "grounded_statement_lookup",
+    "request": {
+      "session_id": "scenario-statements",
+      "message": "Where can I find my account statements?",
+      "confidence": 0.9
+    },
+    "expected_decision": "respond",
+    "expected_reason": null,
+    "expected_citation": "help-statements"
+  },
+  {
+    "name": "low_confidence_abstention",
+    "request": {
+      "session_id": "scenario-confidence",
+      "message": "How do I reset my PIN?",
+      "confidence": 0.4
+    },
+    "expected_decision": "escalate",
+    "expected_reason": "low_confidence",
+    "expected_citation": null
+  },
+  {
+    "name": "sensitive_action_escalation",
+    "request": {
+      "session_id": "scenario-sensitive",
+      "message": "Please close my account",
+      "confidence": 0.99
+    },
+    "expected_decision": "escalate",
+    "expected_reason": "sensitive_financial_request",
+    "expected_citation": null
+  },
+  {
+    "name": "missing_approved_context",
+    "request": {
+      "session_id": "scenario-missing",
+      "message": "Explain orbital mechanics",
+      "confidence": 0.99
+    },
+    "expected_decision": "escalate",
+    "expected_reason": "missing_approved_context",
+    "expected_citation": null
+  }
+]
