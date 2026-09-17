@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -25,7 +26,7 @@ class DemoSupportRepository:
 
     def get_account_status(self, arguments: dict[str, Any]) -> dict[str, Any]:
         account_id = arguments.get("account_id")
-        if not isinstance(account_id, str) or not account_id.startswith("DEMO-"):
+        if not isinstance(account_id, str) or re.fullmatch(r"DEMO-[0-9]{3}", account_id) is None:
             raise InvalidToolArgumentsError("account_id must be a synthetic DEMO identifier")
 
         return {
@@ -37,7 +38,7 @@ class DemoSupportRepository:
     def create_support_ticket(self, arguments: dict[str, Any]) -> dict[str, Any]:
         session_id = arguments.get("session_id")
         category = arguments.get("category")
-        if not isinstance(session_id, str) or not session_id:
+        if not isinstance(session_id, str) or not 1 <= len(session_id) <= 128:
             raise InvalidToolArgumentsError("session_id is required")
         if category not in {"card", "account", "technical"}:
             raise InvalidToolArgumentsError("unsupported ticket category")
