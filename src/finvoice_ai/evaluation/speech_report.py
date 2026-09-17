@@ -2,7 +2,7 @@ import math
 from collections.abc import Iterable
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class SpeechCaseResult(BaseModel):
@@ -23,17 +23,22 @@ class SpeechCaseResult(BaseModel):
     audio_duration_seconds: float = Field(ge=0.0)
     error_type: str | None = None
 
+    @computed_field
     @property
     def word_error_rate(self) -> float:
         return self.word_errors / max(1, self.reference_words)
 
+    @computed_field
     @property
     def character_error_rate(self) -> float:
         return self.character_errors / max(1, self.reference_characters)
 
+    @computed_field
     @property
     def real_time_factor(self) -> float:
-        return self.latency_ms / 1000.0 / max(self.audio_duration_seconds, 1e-9)
+        if self.audio_duration_seconds <= 0.0:
+            return 0.0
+        return self.latency_ms / 1000.0 / self.audio_duration_seconds
 
 
 class SpeechMetricSummary(BaseModel):
@@ -56,6 +61,7 @@ class SpeechSliceSummary(BaseModel):
 class SpeechEvaluationReport(BaseModel):
     dataset_name: str
     dataset_version: str
+    evaluation_split: str
     overall: SpeechMetricSummary
     slices: list[SpeechSliceSummary]
     cases: list[SpeechCaseResult]
