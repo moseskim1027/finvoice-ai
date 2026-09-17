@@ -13,6 +13,7 @@ class RetrievedDocument:
     document_id: str
     title: str
     content: str
+    source: str = "embedded"
 
 
 @dataclass(frozen=True)
