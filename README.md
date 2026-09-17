@@ -245,7 +245,8 @@ before a production ASR model is selected.
 [Transcription port]
       |
       +---- current: deterministic stub
-      `---- future: production ASR adapter
+      `---- optional: Faster Whisper adapter
+                    lazy model loading / CPU or CUDA
       |
       v
 [Transcript metadata]
@@ -267,12 +268,61 @@ Supported input is mono, uncompressed signed 16-bit PCM WAV at 8, 16, 24, or
 48 kHz, up to 60 seconds and 6.5 MB. Unsupported or malformed audio is rejected
 before provider execution.
 
-The current `deterministic-asr-stub-v1` response is intentionally not real
+The default `deterministic-asr-stub-v1` response is intentionally not real
 speech recognition and must not be presented as one. Its purpose is to verify
 the provider boundary, API schema, abstention on silence, and evaluation code.
-The next ASR-focused branch should add a real offline adapter, versioned audio
-fixtures with consent/license metadata, English/Filipino code-switching cases,
-noise and device slices, latency measurements, and calibrated confidence.
+
+To use the local Faster Whisper adapter:
+
+```bash
+python -m pip install -e '.[dev,asr]'
+export FINVOICE_TRANSCRIPTION_PROVIDER=faster_whisper
+export FINVOICE_WHISPER_MODEL_SIZE=small
+export FINVOICE_WHISPER_DEVICE=cpu
+export FINVOICE_WHISPER_COMPUTE_TYPE=int8
+uvicorn finvoice_ai.main:app --reload
+```
+
+The adapter extracts VAD-selected speech, converts PCM16 to normalized samples,
+and resamples it to 16 kHz before inference. Faster Whisper accepts float32
+NumPy audio and downloads named models from the Hugging Face Hub on first use;
+pin or pre-stage model artifacts before a reproducible or offline deployment.
+The ASR extra is based on the official
+[Faster Whisper package](https://pypi.org/project/faster-whisper/) and its
+[model API](https://github.com/SYSTRAN/faster-whisper/blob/master/faster_whisper/transcribe.py).
+
+`confidence` is currently a duration-weighted transformation of Whisper segment
+average log probabilities. It is a useful diagnostic score, not a calibrated
+probability. Before it controls automation or escalation, fit and validate a
+calibrator on held-out, representative English, Filipino, and code-switched
+speech.
+
+The example evaluation manifest at
+`src/finvoice_ai/evaluation/data/speech_manifest.example.json` makes language
+mode, noise, device, pseudonymous speaker, consent basis, license, and split
+explicit. Its audio paths are placeholders—not bundled recordings. Replace
+them only with synthetic, consented, or appropriately licensed WAV files, keep
+test speakers separate from development speakers, and never tune on the test
+split.
+
+```text
+[Governed manifest + WAV files]
+              |
+              v
+       [Offline ASR run]
+              |
+       +------+-------+
+       |              |
+       v              v
+   [WER / CER]   [Latency / failures]
+       |              |
+       +------+-------+
+              v
+ [Slices: language / code-switch / noise / device]
+              |
+              v
+ [Error taxonomy + confidence calibration report]
+```
 
 ## Research pipeline
 
