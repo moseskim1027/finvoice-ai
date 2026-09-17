@@ -1,7 +1,14 @@
-.PHONY: evaluate-retrieval format lint run run-mcp test
+.PHONY: evaluate-retrieval evaluate-speech format lint run run-mcp test
+
+SPEECH_MANIFEST ?= data/speech-manifest.json
+SPEECH_DATASET_ROOT ?= data
+SPEECH_EVALUATION_ARGS ?= --split development
 
 evaluate-retrieval:
 	python -m finvoice_ai.evaluation.retrieval
+
+evaluate-speech:
+	python -m finvoice_ai.evaluation.speech_runner $(SPEECH_MANIFEST) --dataset-root $(SPEECH_DATASET_ROOT) $(SPEECH_EVALUATION_ARGS)
 
 format:
 	ruff format .
