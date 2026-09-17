@@ -62,10 +62,47 @@ when confidence is too low and transfer the case safely.
  Evaluation suite -> CI quality gate -> canary -> production
 ```
 
-The initial scaffold implements only the service boundary, typed conversation
-contract, deterministic policy checks, abstention/escalation decision, health
-endpoint, and tests. Model providers, speech services, retrieval, MCP tools,
-and telemetry will be added behind explicit interfaces in later changes.
+The current implementation provides a transport-independent conversation
+service, typed ports for retrieval, generation, safety policy, and conversation
+storage, deterministic local providers, auditable response metadata, and safe
+escalation for missing context or unavailable providers. Real model providers,
+speech services, MCP tools, and telemetry remain future milestones.
+
+## Current orchestration boundary
+
+```text
+[FastAPI route]
+      |
+      v
+[Conversation service]
+      |
+      +----> [Safety policy]
+      |
+      +----> [Retriever port]
+      |             |
+      |             v
+      |       approved context
+      |
+      +----> [Generator port]
+      |             |
+      |             v
+      |       grounded answer
+      |
+      +----> [Citation metadata]
+      |
+      +----> [Conversation store]
+      |
+      v
+[Typed API response]
+ request ID / decision / reason / confidence
+ citations / provider metadata
+```
+
+All four provider boundaries are structural Python protocols. Deterministic
+local implementations allow the full flow to run in tests without network
+access or an external model. Provider implementations may signal a bounded
+`ProviderUnavailableError`; the service converts it to a safe human escalation
+instead of leaking an exception through the API.
 
 ## Research pipeline
 
@@ -170,8 +207,13 @@ The project will report system and research metrics together.
 
 ```text
 finvoice-ai/
-|-- src/finvoice_ai/     # Application and domain code
-|-- tests/               # Unit and API tests
+|-- src/finvoice_ai/
+|   |-- api/             # HTTP transport
+|   |-- application/     # Orchestration service and provider ports
+|   |-- domain/          # Request models and deterministic policy
+|   `-- infrastructure/  # Local provider implementations
+|-- tests/
+|   `-- scenarios/       # Versioned conversation behavior cases
 |-- .env.example         # Safe local configuration template
 |-- Dockerfile           # Reproducible API container
 |-- Makefile             # Common development commands
@@ -203,6 +245,33 @@ curl -s http://localhost:8000/v1/conversations/respond \
   -d '{"session_id":"demo-1","message":"How do I reset my PIN?","confidence":0.91}'
 ```
 
+The response includes the decision evidence needed for evaluation and tracing:
+
+```json
+{
+  "request_id": "2ee8cbaa-969d-4f1a-8109-72676c9bec1f",
+  "session_id": "demo-1",
+  "decision": "respond",
+  "message": "Open Settings, choose Security, and select Reset PIN.",
+  "reason": null,
+  "confidence": 1.0,
+  "citations": [
+    {
+      "document_id": "help-pin-reset",
+      "title": "Resetting your PIN"
+    }
+  ],
+  "provider": {
+    "model": "local-template-v1",
+    "retrieved_documents": 1
+  }
+}
+```
+
+Run the versioned behavior suite with `make test`. Its cases cover grounded
+responses, low-confidence abstention, sensitive actions, missing approved
+context, malformed input, and provider failure.
+
 Container workflow:
 
 ```bash
@@ -211,8 +280,9 @@ docker compose up --build
 
 ## Current scope and limitations
 
-This repository begins with deterministic placeholder behavior so the service
-contract and safety decisions can be tested before external models are added.
+This repository currently uses deterministic retrieval and generation so the
+service contract and safety decisions can be tested before external models are
+added.
 It does not yet connect to a bank, process real customer data, perform financial
 transactions, or infer emotions. It is a portfolio and research environment,
 not a production financial service.
