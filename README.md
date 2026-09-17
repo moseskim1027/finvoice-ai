@@ -71,7 +71,9 @@ retrieval, auditable response metadata, citation validation, and safe escalation
 for missing context or unavailable providers. Real model providers, vector
 retrieval and telemetry remain future milestones. The initial speech foundation
 validates PCM WAV uploads, detects voice activity, exposes a replaceable ASR
-provider contract, and reports WER/CER metrics. A standalone MCP server exposes
+provider contract, and reports WER/CER metrics. A deterministic streaming layer
+adds ordered PCM chunk ingestion, endpointing, partial/final transcript events,
+bounded session state, and response interruption. A standalone MCP server exposes
 synthetic demo tools through the official stable
 [MCP Python SDK](https://py.sdk.modelcontextprotocol.io/).
 
@@ -385,6 +387,81 @@ contributes an empty-hypothesis error rate, and makes the command exit nonzero.
 The runner reports descriptive measurements; it does not claim statistical
 significance or calibrated confidence.
 
+## Streaming conversation mechanics
+
+The WebSocket endpoint at `/v1/audio/stream/{session_id}` demonstrates bounded,
+transport-thin streaming behavior without a microphone or external service.
+It accepts ordered mono signed 16-bit little-endian PCM chunks and emits an
+event for every state change:
+
+```text
+[base64 PCM chunks]
+        |
+        v
+[session + sequence checks] -- duplicate --> [idempotent accepted]
+        |                     out of order --> [error]
+        v
+[bounded audio buffer]
+        |
+        v
+[energy endpointing]
+ speech_started / trailing silence / maximum duration
+        |
+        +-------------------+
+        |                   |
+        v                   v
+[simulated partial]    [final transcript]
+ offline ASR rerun       response generation
+                              |
+                       new speech / barge-in
+                              |
+                              v
+                       [cancel response once]
+```
+
+Send each chunk as JSON. `pcm_s16le_base64` contains raw PCM samples, not a WAV
+container:
+
+```json
+{
+  "type": "audio_chunk",
+  "utterance_id": "utterance-1",
+  "sequence": 0,
+  "sample_rate_hz": 16000,
+  "pcm_s16le_base64": "AAAAAAAAAAAAAAAAAAAAAA=="
+}
+```
+
+Events use stable `type` discriminators: `accepted`, `speech_started`,
+`partial`, `finalized`, `interrupted`, and `error`. Sequence numbers begin at
+zero for each utterance. Repeated sequence numbers are acknowledged as
+duplicates without appending audio; missing or out-of-order numbers are
+rejected. A new utterance also begins at sequence zero.
+
+The default endpoint detector requires 60 ms of speech, finalizes after 300 ms
+of trailing silence, and forcibly finalizes at 30 seconds. Buffers are capped at
+35 seconds, inactive sessions expire after 60 seconds, and the process admits
+at most 100 sessions. Disconnecting removes session state immediately. These
+defaults live in `StreamingConfig` and tests use a fake clock.
+
+The current partial implementation periodically invokes the existing offline
+transcription provider over accumulated audio. It is simulated partial
+transcription, not genuine token streaming. Its purpose is to prove ordering,
+state, endpoint, cancellation, and transport semantics before choosing a live
+streaming ASR provider. Timing hooks expose time to speech start, time to first
+partial, endpoint delay, final transcript latency, and interruption latency;
+the production-observability milestone will connect them to a metrics backend.
+
+Run the deterministic WebSocket demonstration through its chunked PCM fixture:
+
+```bash
+.venv/bin/pytest -q -o addopts='' tests/test_streaming_api.py
+```
+
+The core test suite separately verifies initial silence, short pauses, forced
+finalization, buffer/session limits, disconnect cleanup, barge-in idempotency,
+stale completion rejection, and isolation between concurrent sessions.
+
 ## Research pipeline
 
 ```text
@@ -495,6 +572,7 @@ finvoice-ai/
 |   |-- evaluation/      # Retrieval benchmark and versioned cases
 |   |-- infrastructure/  # Local provider implementations
 |   |-- speech/          # WAV, VAD, ASR contracts, and response schemas
+|   |-- streaming/       # Chunk events, endpointing, sessions, and interruption
 |   |-- tools/           # Tool policy, gateway, handlers, and audit models
 |   `-- mcp_server.py    # Official SDK protocol adapter
 |-- tests/
