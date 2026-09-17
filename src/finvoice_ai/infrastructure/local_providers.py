@@ -1,3 +1,5 @@
+import re
+
 from finvoice_ai.application.ports import (
     ConversationRecord,
     GenerationResult,
@@ -21,13 +23,17 @@ class KeywordRetriever:
         ),
     )
 
+    @staticmethod
+    def _terms(text: str) -> set[str]:
+        return set(re.findall(r"[a-z0-9]+", text.casefold()))
+
     def retrieve(self, query: str) -> list[RetrievedDocument]:
-        terms = set(query.casefold().split())
+        terms = self._terms(query)
         return [
             document
             for document in self._DOCUMENTS
-            if terms.intersection(document.content.casefold().split())
-            or terms.intersection(document.title.casefold().split())
+            if terms.intersection(self._terms(document.content))
+            or terms.intersection(self._terms(document.title))
         ]
 
 

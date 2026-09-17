@@ -20,6 +20,7 @@ class GenerationResult:
 
 @dataclass(frozen=True)
 class ConversationRecord:
+    request_id: str
     session_id: str
     user_message: str
     assistant_message: str

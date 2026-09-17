@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi.testclient import TestClient
 
 from finvoice_ai.main import app
@@ -25,6 +27,12 @@ def test_conversation_can_respond() -> None:
     assert response.status_code == 200
     assert response.json()["decision"] == "respond"
     assert response.json()["reason"] is None
+    assert response.json()["citations"][0]["document_id"] == "help-pin-reset"
+    assert response.json()["provider"] == {
+        "model": "local-template-v1",
+        "retrieved_documents": 1,
+    }
+    UUID(response.json()["request_id"])
 
 
 def test_low_confidence_escalates() -> None:
@@ -55,3 +63,19 @@ def test_sensitive_request_escalates() -> None:
     assert response.status_code == 200
     assert response.json()["decision"] == "escalate"
     assert response.json()["reason"] == "sensitive_financial_request"
+
+
+def test_missing_context_escalates() -> None:
+    response = client.post(
+        "/v1/conversations/respond",
+        json={
+            "session_id": "test-session",
+            "message": "Can you explain orbital mechanics?",
+            "confidence": 0.99,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "escalate"
+    assert response.json()["reason"] == "missing_approved_context"
+    assert response.json()["citations"] == []

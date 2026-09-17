@@ -14,8 +14,22 @@ class ConversationRequest(BaseModel):
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
+class Citation(BaseModel):
+    document_id: str
+    title: str
+
+
+class ProviderMetadata(BaseModel):
+    model: str
+    retrieved_documents: int = Field(ge=0)
+
+
 class ConversationResponse(BaseModel):
+    request_id: str
     session_id: str
     decision: Decision
     message: str
     reason: str | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    citations: list[Citation] = Field(default_factory=list)
+    provider: ProviderMetadata | None = None

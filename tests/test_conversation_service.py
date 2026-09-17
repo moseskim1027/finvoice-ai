@@ -30,6 +30,9 @@ def test_service_runs_without_http_transport() -> None:
 
     assert response.decision is Decision.RESPOND
     assert response.session_id == "service-test"
+    assert response.citations[0].document_id == "help-statements"
+    assert response.provider is not None
+    assert response.provider.model == "local-template-v1"
 
 
 def test_service_escalates_policy_decision() -> None:
@@ -60,5 +63,6 @@ def test_service_records_completed_turn() -> None:
     )
 
     assert len(store.records) == 1
+    assert store.records[0].request_id
     assert store.records[0].session_id == "stored-session"
     assert store.records[0].decision == "respond"
