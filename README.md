@@ -318,8 +318,72 @@ split.
  [Slices: language / code-switch / noise / device]
               |
               v
- [Error taxonomy + confidence calibration report]
+[Error taxonomy + confidence calibration report]
 ```
+
+### Speech evaluation runner
+
+The manifest-driven runner measures the whole bounded speech path—WAV parsing,
+voice activity detection, preprocessing, and transcription. It emits JSON with
+per-case results, micro-averaged WER and CER, failure rate, p50/p95 latency,
+mean real-time factor, and slices by language, language mode, noise condition,
+and device.
+
+```text
+[Manifest] + [WAV dataset]
+          |
+          v
+ [Select development or test split]
+          |
+          v
+ [WAV -> VAD -> ASR] ----failure----+
+          |                          |
+          v                          v
+ [Hypothesis + timing]       [Typed failure record]
+          |                          |
+          +------------+-------------+
+                       v
+       [Per-case + aggregate JSON report]
+          WER / CER / failure rate
+          p50 + p95 latency / real-time factor
+          language / mode / noise / device slices
+```
+
+The example manifest contains metadata placeholders but no recordings. Copy it
+into a private or ignored `data/` directory, add only synthetic, consented, or
+appropriately licensed WAV files, and update each relative `audio_path`.
+
+Run the development split locally with Faster Whisper:
+
+```bash
+python -m pip install -e '.[dev,asr]'
+mkdir -p reports
+export FINVOICE_TRANSCRIPTION_PROVIDER=faster_whisper
+SPEECH_MANIFEST=data/speech-manifest.json \
+SPEECH_DATASET_ROOT=data \
+SPEECH_EVALUATION_ARGS="--split development --output reports/development.json" \
+make evaluate-speech
+```
+
+Or run the same evaluation in the architecture-neutral ASR container:
+
+```bash
+mkdir -p reports
+docker compose --profile asr run --rm \
+  -v "$PWD/data:/data:ro" \
+  -v "$PWD/reports:/reports" \
+  evaluate-speech-asr \
+  /data/speech-manifest.json \
+  --dataset-root /data \
+  --split development \
+  --output /reports/development.json
+```
+
+Use `--split test` only after model, decoding, VAD, and calibration choices are
+frozen. A failed or missing recording remains visible as a typed failed case,
+contributes an empty-hypothesis error rate, and makes the command exit nonzero.
+The runner reports descriptive measurements; it does not claim statistical
+significance or calibrated confidence.
 
 ## Research pipeline
 
