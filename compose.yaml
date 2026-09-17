@@ -1,9 +1,54 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      target: runtime
     environment:
       FINVOICE_ENVIRONMENT: local
       FINVOICE_LOG_LEVEL: INFO
       FINVOICE_MINIMUM_RESPONSE_CONFIDENCE: "0.70"
     ports:
       - "8000:8000"
+
+  test:
+    build:
+      context: .
+      target: development
+    command: pytest
+
+  lint:
+    build:
+      context: .
+      target: development
+    command: sh -c "ruff check . && ruff format --check ."
+
+  evaluate-retrieval:
+    build:
+      context: .
+      target: development
+    command: python -m finvoice_ai.evaluation.retrieval
+
+  mcp:
+    build:
+      context: .
+      target: runtime
+    command: python -m finvoice_ai.mcp_server
+    stdin_open: true
+
+  asr:
+    profiles: ["asr"]
+    build:
+      context: .
+      target: asr
+    environment:
+      FINVOICE_TRANSCRIPTION_PROVIDER: faster_whisper
+      FINVOICE_WHISPER_MODEL_SIZE: small
+      FINVOICE_WHISPER_DEVICE: cpu
+      FINVOICE_WHISPER_COMPUTE_TYPE: int8
+    ports:
+      - "8000:8000"
+    volumes:
+      - whisper-cache:/root/.cache/huggingface
+
+volumes:
+  whisper-cache:

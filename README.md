@@ -272,15 +272,10 @@ The default `deterministic-asr-stub-v1` response is intentionally not real
 speech recognition and must not be presented as one. Its purpose is to verify
 the provider boundary, API schema, abstention on silence, and evaluation code.
 
-To use the local Faster Whisper adapter:
+To run the Faster Whisper adapter in Docker:
 
 ```bash
-python -m pip install -e '.[dev,asr]'
-export FINVOICE_TRANSCRIPTION_PROVIDER=faster_whisper
-export FINVOICE_WHISPER_MODEL_SIZE=small
-export FINVOICE_WHISPER_DEVICE=cpu
-export FINVOICE_WHISPER_COMPUTE_TYPE=int8
-uvicorn finvoice_ai.main:app --reload
+docker compose --profile asr up --build asr
 ```
 
 The adapter extracts VAD-selected speech, converts PCM16 to normalized samples,
@@ -499,11 +494,36 @@ Run the versioned behavior suite with `make test`. Its cases cover grounded
 responses, low-confidence abstention, sensitive actions, missing approved
 context, malformed input, and provider failure.
 
-Container workflow:
+### Docker alternative
+
+Docker Engine or Docker Desktop with Compose provides an architecture-neutral
+alternative to the local Python workflow. The official Python base image is
+multi-platform, so these commands are the same on ARM64 and x86-64.
+
+Build and start the API:
 
 ```bash
-docker compose up --build
+cp .env.example .env
+docker compose up --build api
 ```
+
+Run the complete validation workflow without installing Python dependencies on
+the host:
+
+```bash
+docker compose run --rm lint
+docker compose run --rm test
+docker compose run --rm evaluate-retrieval
+```
+
+The equivalent MCP command is `docker compose run --rm mcp`. To run the
+optional offline ASR image, use `docker compose --profile asr up --build asr`.
+
+The test image installs development dependencies and contains the test suite;
+the API image contains runtime dependencies only. Faster Whisper uses a
+separate opt-in image because its native inference stack and model cache are
+substantially larger. The named `whisper-cache` volume avoids downloading model
+weights on every ASR container start.
 
 ## Current scope and limitations
 
