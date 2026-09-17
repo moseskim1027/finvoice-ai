@@ -20,3 +20,18 @@ class SpeechSegment:
     @property
     def duration_seconds(self) -> float:
         return self.end_seconds - self.start_seconds
+
+
+@dataclass(frozen=True)
+class TranscriptionResult:
+    text: str
+    confidence: float
+    language: str
+    model: str
+
+
+@dataclass(frozen=True)
+class SpeechAnalysis:
+    duration_seconds: float
+    segments: tuple[SpeechSegment, ...]
+    transcription: TranscriptionResult
