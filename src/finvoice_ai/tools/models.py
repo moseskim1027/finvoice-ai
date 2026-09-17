@@ -29,3 +29,12 @@ class ToolResult:
     tool_name: str
     audit_id: str
     content: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class ToolAuditEvent:
+    audit_id: str
+    tool_name: str
+    principal_id: str
+    outcome: str
+    argument_names: tuple[str, ...]

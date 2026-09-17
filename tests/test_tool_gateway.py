@@ -36,6 +36,9 @@ def test_gateway_reads_synthetic_account_status() -> None:
         "synthetic": True,
     }
     UUID(result.audit_id)
+    assert gateway.audit_events[0].audit_id == result.audit_id
+    assert gateway.audit_events[0].outcome == "succeeded"
+    assert gateway.audit_events[0].argument_names == ("account_id",)
 
 
 def test_gateway_requires_confirmation_before_ticket_write() -> None:
@@ -53,6 +56,7 @@ def test_gateway_requires_confirmation_before_ticket_write() -> None:
         )
 
     assert repository.tickets == []
+    assert gateway.audit_events[0].outcome == "denied_or_failed"
 
 
 def test_gateway_executes_confirmed_ticket_write() -> None:

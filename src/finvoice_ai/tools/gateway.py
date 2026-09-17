@@ -4,7 +4,7 @@ from typing import Any
 from uuid import uuid4
 
 from finvoice_ai.tools.authorization import ToolAuthorizationPolicy
-from finvoice_ai.tools.models import ToolContext, ToolResult, ToolSpec
+from finvoice_ai.tools.models import ToolAuditEvent, ToolContext, ToolResult, ToolSpec
 
 ToolHandler = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -31,6 +31,7 @@ class ToolGateway:
         if len(self._definitions) != len(definitions):
             raise ValueError("tool names must be unique")
         self._policy = policy or ToolAuthorizationPolicy()
+        self.audit_events: list[ToolAuditEvent] = []
 
     def list_specs(self) -> tuple[ToolSpec, ...]:
         return tuple(definition.spec for definition in self._definitions.values())
@@ -45,9 +46,34 @@ class ToolGateway:
         if definition is None:
             raise UnknownToolError(tool_name)
 
-        self._policy.authorize(definition.spec, context)
+        audit_id = str(uuid4())
+        argument_names = tuple(sorted(arguments))
+        try:
+            self._policy.authorize(definition.spec, context)
+            content = definition.handler(arguments)
+        except Exception:
+            self.audit_events.append(
+                ToolAuditEvent(
+                    audit_id=audit_id,
+                    tool_name=tool_name,
+                    principal_id=context.principal_id,
+                    outcome="denied_or_failed",
+                    argument_names=argument_names,
+                )
+            )
+            raise
+
+        self.audit_events.append(
+            ToolAuditEvent(
+                audit_id=audit_id,
+                tool_name=tool_name,
+                principal_id=context.principal_id,
+                outcome="succeeded",
+                argument_names=argument_names,
+            )
+        )
         return ToolResult(
             tool_name=tool_name,
-            audit_id=str(uuid4()),
-            content=definition.handler(arguments),
+            audit_id=audit_id,
+            content=content,
         )
