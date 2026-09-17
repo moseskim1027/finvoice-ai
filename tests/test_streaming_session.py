@@ -167,9 +167,7 @@ def test_barge_in_cancels_active_response_once_and_late_completion_is_ignored() 
 
     events = []
     for sequence in range(3):
-        events.extend(
-            session.accept(chunk(sequence, 1_000, utterance_id="utterance-2"))
-        )
+        events.extend(session.accept(chunk(sequence, 1_000, utterance_id="utterance-2")))
     events.extend(session.accept(chunk(3, 1_000, utterance_id="utterance-2")))
 
     assert event_types(events).count("interrupted") == 1

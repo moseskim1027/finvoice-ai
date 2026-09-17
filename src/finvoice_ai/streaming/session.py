@@ -135,9 +135,8 @@ class StreamingSession:
                 events.extend(self._finalize("maximum_duration", now))
             elif self._silence_duration_ms >= self.config.trailing_silence_ms:
                 events.extend(self._finalize("trailing_silence", now))
-            elif (
-                self._speech_samples - self._last_partial_samples
-                >= self._samples_for_ms(self.config.partial_interval_ms)
+            elif self._speech_samples - self._last_partial_samples >= self._samples_for_ms(
+                self.config.partial_interval_ms
             ):
                 events.append(self._partial(now))
 
@@ -210,10 +209,10 @@ class StreamingSession:
                 "a new utterance must begin at sequence zero",
                 chunk.sequence,
             )
-        if (
-            self.utterance_id not in {None, chunk.utterance_id}
-            and self.phase not in {SessionPhase.IDLE, SessionPhase.RESPONDING}
-        ):
+        if self.utterance_id not in {None, chunk.utterance_id} and self.phase not in {
+            SessionPhase.IDLE,
+            SessionPhase.RESPONDING,
+        }:
             return ErrorEvent(
                 chunk.session_id,
                 chunk.utterance_id,
@@ -266,9 +265,7 @@ class StreamingSession:
             )
         return PartialEvent(self.session_id, self.utterance_id or "", result, now)
 
-    def _finalize(
-        self, reason: str, now: float
-    ) -> list[FinalizedEvent]:
+    def _finalize(self, reason: str, now: float) -> list[FinalizedEvent]:
         self.phase = SessionPhase.FINALIZING
         result = self.transcriber.transcribe(self._audio(), is_final=True)
         duration_seconds = len(self._samples) / (self._sample_rate_hz or 1)

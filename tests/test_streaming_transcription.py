@@ -8,9 +8,7 @@ from finvoice_ai.streaming.transcription import OfflineStreamingTranscriptionAda
 class RecordingProvider:
     calls: list[tuple[AudioBuffer, list[SpeechSegment]]] = field(default_factory=list)
 
-    def transcribe(
-        self, audio: AudioBuffer, segments: list[SpeechSegment]
-    ) -> TranscriptionResult:
+    def transcribe(self, audio: AudioBuffer, segments: list[SpeechSegment]) -> TranscriptionResult:
         self.calls.append((audio, segments))
         return TranscriptionResult("simulated partial", 0.6, "en", "offline")
 
