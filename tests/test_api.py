@@ -28,6 +28,9 @@ def test_conversation_can_respond() -> None:
     assert response.json()["decision"] == "respond"
     assert response.json()["reason"] is None
     assert response.json()["citations"][0]["document_id"] == "pin-reset"
+    assert response.json()["citations"][0]["source"] == "knowledge/pin-reset.md"
+    assert response.json()["citations"][0]["score"] > 0
+    assert response.json()["citations"][0]["excerpt"]
     assert response.json()["provider"] == {
         "model": "local-template-v1",
         "retrieved_documents": 1,

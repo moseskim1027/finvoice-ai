@@ -17,6 +17,9 @@ class ConversationRequest(BaseModel):
 class Citation(BaseModel):
     document_id: str
     title: str
+    source: str
+    score: float = Field(ge=0.0)
+    excerpt: str
 
 
 class ProviderMetadata(BaseModel):

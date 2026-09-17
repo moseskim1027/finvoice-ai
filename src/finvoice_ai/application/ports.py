@@ -22,6 +22,7 @@ class GenerationResult:
     text: str
     confidence: float
     model: str
+    cited_document_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -27,6 +27,7 @@ class TemplateResponseGenerator:
             text=context[0].content,
             confidence=1.0,
             model=self.model_name,
+            cited_document_ids=(context[0].document_id,),
         )
 
 
