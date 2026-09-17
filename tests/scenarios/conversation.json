@@ -8,7 +8,7 @@
     },
     "expected_decision": "respond",
     "expected_reason": null,
-    "expected_citation": "help-pin-reset"
+    "expected_citation": "pin-reset"
   },
   {
     "name": "grounded_statement_lookup",
@@ -19,7 +19,7 @@
     },
     "expected_decision": "respond",
     "expected_reason": null,
-    "expected_citation": "help-statements"
+    "expected_citation": "statements"
   },
   {
     "name": "low_confidence_abstention",

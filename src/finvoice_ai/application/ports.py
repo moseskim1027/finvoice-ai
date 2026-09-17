@@ -13,6 +13,8 @@ class RetrievedDocument:
     document_id: str
     title: str
     content: str
+    source: str = "embedded"
+    score: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -20,6 +22,7 @@ class GenerationResult:
     text: str
     confidence: float
     model: str
+    cited_document_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

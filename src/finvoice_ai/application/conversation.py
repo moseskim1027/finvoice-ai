@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from finvoice_ai.application.grounding import validate_citations
 from finvoice_ai.application.ports import (
     ConversationRecord,
     ConversationStore,
@@ -48,6 +49,7 @@ class ConversationService:
             try:
                 context = self._retriever.retrieve(request.message)
                 generation = self._generator.generate(request.message, context)
+                validation = validate_citations(generation.cited_document_ids, context)
             except ProviderUnavailableError:
                 response = ConversationResponse(
                     request_id=request_id,
@@ -70,6 +72,19 @@ class ConversationService:
                             retrieved_documents=0,
                         ),
                     )
+                elif not validation.is_valid:
+                    response = ConversationResponse(
+                        request_id=request_id,
+                        session_id=request.session_id,
+                        decision=Decision.ESCALATE,
+                        message="I could not validate the sources for an automated answer.",
+                        reason="invalid_citation",
+                        confidence=generation.confidence,
+                        provider=ProviderMetadata(
+                            model=generation.model,
+                            retrieved_documents=len(context),
+                        ),
+                    )
                 else:
                     response = ConversationResponse(
                         request_id=request_id,
@@ -78,8 +93,14 @@ class ConversationService:
                         message=generation.text,
                         confidence=generation.confidence,
                         citations=[
-                            Citation(document_id=document.document_id, title=document.title)
-                            for document in context
+                            Citation(
+                                document_id=document.document_id,
+                                title=document.title,
+                                source=document.source,
+                                score=document.score,
+                                excerpt=document.content[:240],
+                            )
+                            for document in validation.cited_documents
                         ],
                         provider=ProviderMetadata(
                             model=generation.model,
