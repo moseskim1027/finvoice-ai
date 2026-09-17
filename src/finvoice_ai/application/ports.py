@@ -4,6 +4,10 @@ from typing import Protocol
 from finvoice_ai.domain.policy import PolicyDecision
 
 
+class ProviderUnavailableError(RuntimeError):
+    """Raised when an external or local provider cannot complete a request."""
+
+
 @dataclass(frozen=True)
 class RetrievedDocument:
     document_id: str

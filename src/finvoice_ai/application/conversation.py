@@ -3,6 +3,7 @@ from uuid import uuid4
 from finvoice_ai.application.ports import (
     ConversationRecord,
     ConversationStore,
+    ProviderUnavailableError,
     ResponseGenerator,
     Retriever,
     SafetyPolicy,
@@ -44,37 +45,47 @@ class ConversationService:
                 reason=decision.reason,
             )
         else:
-            context = self._retriever.retrieve(request.message)
-            generation = self._generator.generate(request.message, context)
-            if not context:
+            try:
+                context = self._retriever.retrieve(request.message)
+                generation = self._generator.generate(request.message, context)
+            except ProviderUnavailableError:
                 response = ConversationResponse(
                     request_id=request_id,
                     session_id=request.session_id,
                     decision=Decision.ESCALATE,
-                    message="I could not verify an answer from approved information.",
-                    reason="missing_approved_context",
-                    confidence=generation.confidence,
-                    provider=ProviderMetadata(
-                        model=generation.model,
-                        retrieved_documents=0,
-                    ),
+                    message="The automated service is unavailable. I am transferring your request.",
+                    reason="provider_unavailable",
                 )
             else:
-                response = ConversationResponse(
-                    request_id=request_id,
-                    session_id=request.session_id,
-                    decision=Decision.RESPOND,
-                    message=generation.text,
-                    confidence=generation.confidence,
-                    citations=[
-                        Citation(document_id=document.document_id, title=document.title)
-                        for document in context
-                    ],
-                    provider=ProviderMetadata(
-                        model=generation.model,
-                        retrieved_documents=len(context),
-                    ),
-                )
+                if not context:
+                    response = ConversationResponse(
+                        request_id=request_id,
+                        session_id=request.session_id,
+                        decision=Decision.ESCALATE,
+                        message="I could not verify an answer from approved information.",
+                        reason="missing_approved_context",
+                        confidence=generation.confidence,
+                        provider=ProviderMetadata(
+                            model=generation.model,
+                            retrieved_documents=0,
+                        ),
+                    )
+                else:
+                    response = ConversationResponse(
+                        request_id=request_id,
+                        session_id=request.session_id,
+                        decision=Decision.RESPOND,
+                        message=generation.text,
+                        confidence=generation.confidence,
+                        citations=[
+                            Citation(document_id=document.document_id, title=document.title)
+                            for document in context
+                        ],
+                        provider=ProviderMetadata(
+                            model=generation.model,
+                            retrieved_documents=len(context),
+                        ),
+                    )
 
         self._store.append(
             ConversationRecord(

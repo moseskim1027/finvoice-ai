@@ -1,4 +1,5 @@
 from finvoice_ai.application.conversation import ConversationService
+from finvoice_ai.application.ports import ProviderUnavailableError, RetrievedDocument
 from finvoice_ai.domain.models import ConversationRequest, Decision
 from finvoice_ai.domain.policy import SupportPolicy
 from finvoice_ai.infrastructure.local_providers import (
@@ -66,3 +67,28 @@ def test_service_records_completed_turn() -> None:
     assert store.records[0].request_id
     assert store.records[0].session_id == "stored-session"
     assert store.records[0].decision == "respond"
+
+
+def test_service_safely_escalates_provider_failure() -> None:
+    class UnavailableRetriever:
+        def retrieve(self, query: str) -> list[RetrievedDocument]:
+            del query
+            raise ProviderUnavailableError
+
+    service = ConversationService(
+        policy=SupportPolicy(minimum_confidence=0.70),
+        retriever=UnavailableRetriever(),
+        generator=TemplateResponseGenerator(),
+        store=InMemoryConversationStore(),
+    )
+
+    response = service.respond(
+        ConversationRequest(
+            session_id="failure-test",
+            message="How do I reset my PIN?",
+            confidence=0.95,
+        )
+    )
+
+    assert response.decision is Decision.ESCALATE
+    assert response.reason == "provider_unavailable"
