@@ -64,9 +64,10 @@ when confidence is too low and transfer the case safely.
 
 The current implementation provides a transport-independent conversation
 service, typed ports for retrieval, generation, safety policy, and conversation
-storage, deterministic local providers, auditable response metadata, and safe
-escalation for missing context or unavailable providers. Real model providers,
-speech services, MCP tools, and telemetry remain future milestones.
+storage, a repository-controlled Markdown knowledge base, deterministic BM25
+retrieval, auditable response metadata, citation validation, and safe escalation
+for missing context or unavailable providers. Real model providers, vector
+retrieval, speech services, MCP tools, and telemetry remain future milestones.
 
 ## Current orchestration boundary
 
@@ -103,6 +104,55 @@ local implementations allow the full flow to run in tests without network
 access or an external model. Provider implementations may signal a bounded
 `ProviderUnavailableError`; the service converts it to a safe human escalation
 instead of leaking an exception through the API.
+
+## Grounded retrieval
+
+The current baseline keeps approved content as version-controlled Markdown and
+ranks it with BM25. It is deliberately small and inspectable so later vector or
+hybrid implementations can be evaluated against identical contracts and cases.
+
+```text
+[Approved Markdown]
+        |
+        v
+[Document loader]
+ title / body / stable ID / source path
+        |
+        v
+[BM25 index]
+ tokenization / term frequency / length normalization
+        |
+        v
+[Ranked context]
+ score threshold / top-k
+        |
+        v
+[Response generator]
+ answer + cited document IDs
+        |
+        v
+[Citation validator]
+ cited IDs must be present in retrieved context
+        |
+   +----+----+
+   |         |
+ valid     invalid
+   |         |
+   v         v
+[response] [safe escalation]
+```
+
+Run the offline benchmark with:
+
+```bash
+make evaluate-retrieval
+```
+
+The versioned six-case starter dataset currently produces hit rate `1.0` and
+mean reciprocal rank `1.0`. These numbers only verify the tiny baseline corpus;
+they are not evidence of production retrieval quality. The dataset must grow
+with paraphrases, ambiguous questions, hard negatives, multilingual queries,
+and policy-version conflicts before comparing production candidates.
 
 ## Research pipeline
 
@@ -211,6 +261,7 @@ finvoice-ai/
 |   |-- api/             # HTTP transport
 |   |-- application/     # Orchestration service and provider ports
 |   |-- domain/          # Request models and deterministic policy
+|   |-- evaluation/      # Retrieval benchmark and versioned cases
 |   `-- infrastructure/  # Local provider implementations
 |-- tests/
 |   `-- scenarios/       # Versioned conversation behavior cases
@@ -257,8 +308,11 @@ The response includes the decision evidence needed for evaluation and tracing:
   "confidence": 1.0,
   "citations": [
     {
-      "document_id": "help-pin-reset",
-      "title": "Resetting your PIN"
+      "document_id": "pin-reset",
+      "title": "Resetting your PIN",
+      "source": "knowledge/pin-reset.md",
+      "score": 2.13,
+      "excerpt": "Open Settings, choose Security, and select Reset PIN..."
     }
   ],
   "provider": {
