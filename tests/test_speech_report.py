@@ -14,10 +14,14 @@ def make_result(case_id: str, language: str, latency_ms: float) -> SpeechCaseRes
         language_mode="monolingual",
         noise_condition="clean",
         device="phone",
+        speaker_id=f"speaker-{case_id}",
+        intent_id="pin_reset",
+        utterance_type="short-command",
         status="success",
         hypothesis="hello",
         detected_language=language,
         model="fake",
+        confidence=0.75,
         word_errors=1,
         reference_words=4,
         character_errors=2,
@@ -40,6 +44,10 @@ def test_summary_uses_micro_error_rates_and_nearest_rank_latency() -> None:
     assert summary.failure_rate == 0.5
     assert summary.word_error_rate == pytest.approx(5 / 8)
     assert summary.character_error_rate == 0.2
+    assert summary.macro_word_error_rate == pytest.approx(0.625)
+    assert summary.macro_character_error_rate == 0.2
+    assert summary.language_identification_accuracy == 1.0
+    assert summary.expected_calibration_error == 0.75
     assert summary.latency_p50_ms == 100.0
     assert summary.latency_p95_ms == 300.0
     assert summary.mean_real_time_factor == 0.1
@@ -56,6 +64,10 @@ def test_slice_summaries_cover_each_declared_dimension() -> None:
         ("language_mode", "monolingual"),
         ("noise_condition", "clean"),
         ("device", "phone"),
+        ("speaker_id", "speaker-one"),
+        ("speaker_id", "speaker-two"),
+        ("intent_id", "pin_reset"),
+        ("utterance_type", "short-command"),
     }
 
 
@@ -65,3 +77,4 @@ def test_empty_summary_is_explicitly_zeroed() -> None:
     assert summary.case_count == 0
     assert summary.failure_rate == 0.0
     assert summary.latency_p95_ms == 0.0
+    assert summary.expected_calibration_error == 0.0

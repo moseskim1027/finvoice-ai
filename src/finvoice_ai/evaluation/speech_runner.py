@@ -85,6 +85,7 @@ class SpeechEvaluationRunner:
             hypothesis=analysis.transcription.text,
             detected_language=analysis.transcription.language,
             model=analysis.transcription.model,
+            confidence=analysis.transcription.confidence,
             word_errors=word_error.errors,
             reference_words=word_error.reference_units,
             character_errors=character_error.errors,
@@ -107,6 +108,7 @@ class SpeechEvaluationRunner:
             hypothesis="",
             detected_language="und",
             model=self._provider_name,
+            confidence=0.0,
             word_errors=word_error.errors,
             reference_words=word_error.reference_units,
             character_errors=character_error.errors,
@@ -124,6 +126,9 @@ def _case_dimensions(case: SpeechEvaluationCase) -> dict[str, str]:
         "language_mode": case.language_mode,
         "noise_condition": case.noise_condition,
         "device": case.device,
+        "speaker_id": case.speaker_id,
+        "intent_id": case.intent_id,
+        "utterance_type": case.utterance_type,
     }
 
 

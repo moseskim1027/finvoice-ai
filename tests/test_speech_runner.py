@@ -94,6 +94,8 @@ def test_runner_reports_accuracy_latency_and_missing_files(tmp_path: Path) -> No
     assert report.cases[1].word_error_rate == 1.0
     assert report.cases[1].real_time_factor == 0.0
     assert report.cases[0].model_dump()["word_error_rate"] == 0.5
+    assert report.cases[0].confidence == 0.8
+    assert report.cases[0].intent_id == "pin_reset"
 
 
 def test_runner_records_provider_error_and_continues(tmp_path: Path) -> None:
