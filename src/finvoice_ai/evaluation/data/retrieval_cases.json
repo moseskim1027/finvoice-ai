@@ -1,0 +1,26 @@
+[
+  {
+    "query": "How do I reset my security PIN?",
+    "relevant_document_ids": ["pin-reset"]
+  },
+  {
+    "query": "Where can I download a monthly account statement?",
+    "relevant_document_ids": ["statements"]
+  },
+  {
+    "query": "My card was stolen and I need to lock it",
+    "relevant_document_ids": ["card-security"]
+  },
+  {
+    "query": "There is an unauthorized card transaction",
+    "relevant_document_ids": ["card-security"]
+  },
+  {
+    "query": "Why is identity verification required for a new PIN?",
+    "relevant_document_ids": ["pin-reset"]
+  },
+  {
+    "query": "Choose a statement period and view it",
+    "relevant_document_ids": ["statements"]
+  }
+]

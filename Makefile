@@ -1,4 +1,7 @@
-.PHONY: format lint run test
+.PHONY: evaluate-retrieval format lint run test
+
+evaluate-retrieval:
+	python -m finvoice_ai.evaluation.retrieval
 
 format:
 	ruff format .
