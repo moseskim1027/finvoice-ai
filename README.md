@@ -67,8 +67,10 @@ service, typed ports for retrieval, generation, safety policy, and conversation
 storage, a repository-controlled Markdown knowledge base, deterministic BM25
 retrieval, auditable response metadata, citation validation, and safe escalation
 for missing context or unavailable providers. Real model providers, vector
-retrieval, speech services, and telemetry remain future milestones. A standalone
-MCP server now exposes synthetic demo tools through the official stable
+retrieval and telemetry remain future milestones. The initial speech foundation
+validates PCM WAV uploads, detects voice activity, exposes a replaceable ASR
+provider contract, and reports WER/CER metrics. A standalone MCP server exposes
+synthetic demo tools through the official stable
 [MCP Python SDK](https://py.sdk.modelcontextprotocol.io/).
 
 ## Current orchestration boundary
@@ -217,6 +219,61 @@ authentication. A deployed version must derive identity and scopes from a
 verified token, bind confirmation to the initiating user and exact action, use
 durable append-only audit storage, and apply rate limits and replay protection.
 
+## Speech foundation
+
+The first speech slice establishes deterministic input and evaluation contracts
+before a production ASR model is selected.
+
+```text
+[WAV upload]
+      |
+      v
+[Input validation]
+ mono / signed 16-bit PCM / supported rate
+ duration limit / upload-size limit
+      |
+      v
+[Energy VAD]
+ 20 ms frames / RMS threshold
+ minimum speech / silence bridging
+      |
+      v
+[Speech segments]
+ start / end / mean RMS
+      |
+      v
+[Transcription port]
+      |
+      +---- current: deterministic stub
+      `---- future: production ASR adapter
+      |
+      v
+[Transcript metadata]
+ text / confidence / language / model
+      |
+      v
+[Offline evaluation]
+ WER / CER / robustness slices
+```
+
+Analyze a local WAV file after starting the API:
+
+```bash
+curl -s http://localhost:8000/v1/audio/analyze \
+  -F 'file=@sample.wav;type=audio/wav'
+```
+
+Supported input is mono, uncompressed signed 16-bit PCM WAV at 8, 16, 24, or
+48 kHz, up to 60 seconds and 6.5 MB. Unsupported or malformed audio is rejected
+before provider execution.
+
+The current `deterministic-asr-stub-v1` response is intentionally not real
+speech recognition and must not be presented as one. Its purpose is to verify
+the provider boundary, API schema, abstention on silence, and evaluation code.
+The next ASR-focused branch should add a real offline adapter, versioned audio
+fixtures with consent/license metadata, English/Filipino code-switching cases,
+noise and device slices, latency measurements, and calibrated confidence.
+
 ## Research pipeline
 
 ```text
@@ -326,6 +383,7 @@ finvoice-ai/
 |   |-- domain/          # Request models and deterministic policy
 |   |-- evaluation/      # Retrieval benchmark and versioned cases
 |   |-- infrastructure/  # Local provider implementations
+|   |-- speech/          # WAV, VAD, ASR contracts, and response schemas
 |   |-- tools/           # Tool policy, gateway, handlers, and audit models
 |   `-- mcp_server.py    # Official SDK protocol adapter
 |-- tests/
