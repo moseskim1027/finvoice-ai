@@ -1,5 +1,7 @@
 # FinVoice AI
 
+[![CI](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml)
+
 FinVoice AI is a research-to-production portfolio project for a bilingual
 financial-support voice and text agent. It is designed to demonstrate speech
 AI, grounded LLM applications, safe tool use, human escalation, evaluation,
