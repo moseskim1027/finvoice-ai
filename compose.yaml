@@ -28,6 +28,13 @@ services:
       target: development
     command: python -m finvoice_ai.evaluation.retrieval
 
+  evaluate-speech:
+    build:
+      context: .
+      target: development
+    entrypoint: ["python", "-m", "finvoice_ai.evaluation.speech_runner"]
+    command: ["--help"]
+
   mcp:
     build:
       context: .
