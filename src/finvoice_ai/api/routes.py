@@ -12,7 +12,7 @@ from finvoice_ai.infrastructure.local_providers import (
     TemplateResponseGenerator,
 )
 from finvoice_ai.infrastructure.retrieval import BM25Retriever
-from finvoice_ai.speech.providers import DeterministicTranscriptionProvider
+from finvoice_ai.speech.asr import AsrDependencyError, build_transcription_provider
 from finvoice_ai.speech.schemas import (
     SpeechAnalysisResponse,
     SpeechSegmentResponse,
@@ -54,7 +54,10 @@ def respond(
     response_model=SpeechAnalysisResponse,
     tags=["speech"],
 )
-async def analyze_audio(file: Annotated[UploadFile, File()]) -> SpeechAnalysisResponse:
+async def analyze_audio(
+    file: Annotated[UploadFile, File()],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> SpeechAnalysisResponse:
     data = await file.read(MAXIMUM_WAV_BYTES + 1)
     if len(data) > MAXIMUM_WAV_BYTES:
         raise HTTPException(
@@ -62,13 +65,18 @@ async def analyze_audio(file: Annotated[UploadFile, File()]) -> SpeechAnalysisRe
             detail="WAV upload exceeds size limit",
         )
 
-    service = SpeechService(
-        loader=PcmWavLoader(),
-        vad=EnergyVoiceActivityDetector(),
-        transcriber=DeterministicTranscriptionProvider(),
-    )
     try:
+        service = SpeechService(
+            loader=PcmWavLoader(),
+            vad=EnergyVoiceActivityDetector(),
+            transcriber=build_transcription_provider(settings),
+        )
         analysis = service.analyze(data)
+    except AsrDependencyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(error),
+        ) from error
     except InvalidAudioError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
