@@ -18,17 +18,17 @@ from finvoice_ai.speech.models import AudioBuffer
 from finvoice_ai.speech.wav import PcmWavLoader
 
 VOICES = (
-    ("Samantha", "voice-a", "development"),
-    ("Daniel", "voice-b", "development"),
-    ("Rishi", "voice-c", "development"),
-    ("Karen", "voice-d", "test"),
+    ("en-us+m1", "voice-a", "development"),
+    ("en-gb+f2", "voice-b", "development"),
+    ("en-in+m3", "voice-c", "development"),
+    ("en-au+f3", "voice-d", "test"),
 )
 NOISE_CONDITIONS = ("clean", "household", "street", "cafe")
 SEED = 20260918
 
 
 def generate(output_root: Path, taxonomy_path: Path) -> Path:
-    _require_command("say")
+    _require_command("espeak-ng")
     _require_command("ffmpeg")
     taxonomy = json.loads(taxonomy_path.read_text(encoding="utf-8"))
     source_dir = output_root / "source"
@@ -41,18 +41,19 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
     for voice_index, (voice, speaker_id, split) in enumerate(VOICES):
         for template_index, template in enumerate(taxonomy["templates"]):
             case_id = f"{template['template_id']}-{speaker_id}"
-            aiff_path = source_dir / f"{case_id}.aiff"
+            transcript = _render_text(template, voice_index)
             wav_path = source_dir / f"{case_id}.wav"
+            raw_path = source_dir / f"{case_id}-raw.wav"
             subprocess.run(
                 [
-                    "say",
+                    "espeak-ng",
                     "-v",
                     voice,
-                    "-r",
+                    "-s",
                     "175",
-                    "-o",
-                    str(aiff_path),
-                    template["text"],
+                    "-w",
+                    str(raw_path),
+                    transcript,
                 ],
                 check=True,
             )
@@ -63,7 +64,7 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
                     "error",
                     "-y",
                     "-i",
-                    str(aiff_path),
+                    str(raw_path),
                     "-ac",
                     "1",
                     "-ar",
@@ -89,7 +90,7 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
                 {
                     "case_id": case_id,
                     "audio_path": relative_path.as_posix(),
-                    "reference_transcript": template["text"],
+                    "reference_transcript": transcript,
                     "language": template["language"],
                     "language_mode": template["language_mode"],
                     "noise_condition": condition,
@@ -98,8 +99,8 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
                     "intent_id": template["intent_id"],
                     "speaker_id": speaker_id,
                     "consent_basis": "synthetic-generated",
-                    "license": "Apple system voice output; local evaluation only",
-                    "provenance": f"macOS say voice {voice}; synthetic noise {condition}",
+                    "license": "locally generated synthetic output; evaluation only",
+                    "provenance": f"eSpeak NG 1.52 voice {voice}; synthetic noise {condition}",
                     "collection_method": "scripts/generate_synthetic_benchmark.py",
                     "audio_sha256": digest,
                     "split": split,
@@ -112,7 +113,7 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
         "taxonomy_version": taxonomy["taxonomy_version"],
         "transform_version": TRANSFORM_VERSION,
         "data_statement": (
-            "Synthetic macOS English voices reading English, Filipino, and code-switched "
+            "Synthetic eSpeak NG English voices reading English, Filipino, and code-switched "
             "templates. Filipino pronunciation is not representative; local evaluation only."
         ),
         "cases": cases,
@@ -126,6 +127,9 @@ def generate(output_root: Path, taxonomy_path: Path) -> Path:
         "taxonomy_sha256": hashlib.sha256(taxonomy_path.read_bytes()).hexdigest(),
         "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
         "voices": [voice for voice, _, _ in VOICES],
+        "espeak_ng": subprocess.run(
+            ["espeak-ng", "--version"], check=True, capture_output=True, text=True
+        ).stdout.splitlines()[0],
         "ffmpeg": subprocess.run(
             ["ffmpeg", "-version"], check=True, capture_output=True, text=True
         ).stdout.splitlines()[0],
@@ -148,6 +152,17 @@ def _synthetic_noise(condition: str, duration_seconds: int = 30) -> AudioBuffer:
         for index in range(count)
     )
     return AudioBuffer(sample_rate, samples)
+
+
+def _render_text(template: dict[str, str], voice_index: int) -> str:
+    if voice_index == 0:
+        return template["text"]
+    suffixes = {
+        "en": ("please", "right now", "today"),
+        "fil": ("po", "ngayon", "ngayong araw"),
+        "en-fil": ("please po", "right now", "today po"),
+    }
+    return f"{template['text']} {suffixes[template['language']][voice_index - 1]}"
 
 
 def _require_command(command: str) -> None:
