@@ -14,6 +14,7 @@ class RetrievedDocument:
     title: str
     content: str
     source: str = "embedded"
+    score: float = 0.0
 
 
 @dataclass(frozen=True)

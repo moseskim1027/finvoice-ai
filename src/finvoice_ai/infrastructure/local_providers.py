@@ -1,40 +1,8 @@
-import re
-
 from finvoice_ai.application.ports import (
     ConversationRecord,
     GenerationResult,
     RetrievedDocument,
 )
-
-
-class KeywordRetriever:
-    """Deterministic approved-document retrieval for local development."""
-
-    _DOCUMENTS = (
-        RetrievedDocument(
-            document_id="help-pin-reset",
-            title="Resetting your PIN",
-            content="Open Settings, choose Security, and select Reset PIN.",
-        ),
-        RetrievedDocument(
-            document_id="help-statements",
-            title="Finding account statements",
-            content="Open Accounts, select an account, and choose Statements.",
-        ),
-    )
-
-    @staticmethod
-    def _terms(text: str) -> set[str]:
-        return set(re.findall(r"[a-z0-9]+", text.casefold()))
-
-    def retrieve(self, query: str) -> list[RetrievedDocument]:
-        terms = self._terms(query)
-        return [
-            document
-            for document in self._DOCUMENTS
-            if terms.intersection(self._terms(document.content))
-            or terms.intersection(self._terms(document.title))
-        ]
 
 
 class TemplateResponseGenerator:
