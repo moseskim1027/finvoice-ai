@@ -16,6 +16,15 @@ Use pseudonymous speaker IDs and allocate each speaker to exactly one split.
 Do not select speakers, wording, or transformations after observing test
 results.
 
+The reproducible local synthetic starter set uses eSpeak NG and FFmpeg. It
+creates 60 files under ignored `data/`, records exact voice variants and hashes,
+and explicitly labels the English-voice limitation:
+
+```bash
+brew install espeak-ng ffmpeg
+python scripts/generate_synthetic_benchmark.py --output-root data
+```
+
 ## 2. Apply deterministic transforms
 
 The standard transform resamples to 16 kHz mono PCM16 and normalizes to -3 dBFS.
@@ -81,6 +90,10 @@ make evaluate-speech
 
 Freeze one configuration and document the rationale before running `test` once.
 Never revise the frozen choice based on held-out results.
+
+The published v1 baseline compared `tiny` and `base` with CPU int8 and beam size
+1, froze `base` from development evidence, and then ran the held-out test split
+once. See `docs/bilingual-asr-baseline.md` for the results and limitations.
 
 ## 5. Publish safe aggregates
 
