@@ -9,6 +9,16 @@ services:
       FINVOICE_MINIMUM_RESPONSE_CONFIDENCE: "0.70"
     ports:
       - "8000:8000"
+    init: true
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
 
   test:
     build:
@@ -56,6 +66,10 @@ services:
       target: runtime
     command: python -m finvoice_ai.mcp_server
     stdin_open: true
+    init: true
+    stop_grace_period: 15s
+    security_opt:
+      - no-new-privileges:true
 
   asr:
     profiles: ["asr"]

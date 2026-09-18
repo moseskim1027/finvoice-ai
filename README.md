@@ -31,6 +31,14 @@ concatenation underperformed the transcript model. See the
 [multimodal intent study](docs/multimodal-intent-study.md) for methods, results,
 calibration findings, and limitations.
 
+The final operability milestone adds correlated JSON logs, bounded service
+metrics, OpenTelemetry spans, health/readiness checks, fault injection, and a
+deterministic load/cost benchmark. See the
+[production evidence](docs/production-evidence.md),
+[service objectives](docs/service-slos.md), and
+[scripted demo](docs/demo-runbook.md). These artifacts describe a local
+portfolio environment only and do not imply real-bank connectivity.
+
 ## System architecture
 
 ```text

@@ -1,4 +1,4 @@
-.PHONY: audit-speech evaluate-retrieval evaluate-speech format lint research-baselines run run-mcp test
+.PHONY: audit-speech evaluate-retrieval evaluate-speech format lint observable-stack production-evidence research-baselines run run-mcp test
 
 SPEECH_MANIFEST ?= data/speech-manifest.json
 SPEECH_DATASET_ROOT ?= data
@@ -24,6 +24,12 @@ format:
 lint:
 	ruff check .
 	ruff format --check .
+
+observable-stack:
+	docker compose up --build api
+
+production-evidence:
+	python -m finvoice_ai.evaluation.production_benchmark --output src/finvoice_ai/evaluation/data/results/production_evidence.json
 
 run:
 	uvicorn finvoice_ai.main:app --reload

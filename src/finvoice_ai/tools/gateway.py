@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import uuid4
 
+from finvoice_ai.observability import METRICS, operation
 from finvoice_ai.tools.authorization import ToolAuthorizationPolicy
 from finvoice_ai.tools.models import ToolAuditEvent, ToolContext, ToolResult, ToolSpec
 
@@ -49,9 +50,12 @@ class ToolGateway:
         audit_id = str(uuid4())
         argument_names = tuple(sorted(arguments))
         try:
-            self._policy.authorize(definition.spec, context)
-            content = definition.handler(arguments)
+            with operation("mcp.authorize", tool=tool_name):
+                self._policy.authorize(definition.spec, context)
+            with operation("mcp.execute", tool=tool_name):
+                content = definition.handler(arguments)
         except Exception:
+            METRICS.increment("finvoice_mcp_calls", {"outcome": "denied_or_failed"})
             self.audit_events.append(
                 ToolAuditEvent(
                     audit_id=audit_id,
@@ -63,6 +67,7 @@ class ToolGateway:
             )
             raise
 
+        METRICS.increment("finvoice_mcp_calls", {"outcome": "succeeded"})
         self.audit_events.append(
             ToolAuditEvent(
                 audit_id=audit_id,

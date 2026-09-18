@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "notice": "Representative sanitized local trace; IDs are synthetic and request content is excluded.",
+  "trace_id": "0123456789abcdef0123456789abcdef",
+  "spans": [
+    {"name": "http.request", "parent": null, "attributes": {"http.method": "POST", "http.route": "/v1/conversations/respond", "http.status_code": 200}},
+    {"name": "conversation.respond", "parent": "http.request", "attributes": {"finvoice.session_id": "demo-session"}},
+    {"name": "policy.evaluate", "parent": "conversation.respond", "attributes": {}},
+    {"name": "retrieval.retrieve", "parent": "conversation.respond", "attributes": {}},
+    {"name": "generation.generate", "parent": "conversation.respond", "attributes": {}},
+    {"name": "grounding.validate", "parent": "conversation.respond", "attributes": {}},
+    {"name": "persistence.append", "parent": "conversation.respond", "attributes": {}}
+  ],
+  "excluded": ["request body", "transcript", "audio", "account identifiers", "secrets"]
+}

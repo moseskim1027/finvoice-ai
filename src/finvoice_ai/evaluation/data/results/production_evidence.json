@@ -1,0 +1,59 @@
+{
+  "cache_effect": {
+    "p95_latency_reduction_ms": 3.6779570000362583,
+    "throughput_ratio": 5.63715854196671
+  },
+  "cold_rebuild_retriever": {
+    "cpu_seconds": 0.210633,
+    "escalations": 100,
+    "estimated_cpu_cost_per_conversation_usd": 7.313645833333334e-09,
+    "failures": 0,
+    "latency_mean_ms": 2.2737884400021358,
+    "latency_p50_ms": 2.1212920000834856,
+    "latency_p95_ms": 3.739916000085941,
+    "latency_p99_ms": 4.53979200028698,
+    "normalized_cpu_utilization": 0.2275898867511665,
+    "peak_rss_bytes": 35094528,
+    "requests": 400,
+    "throughput_requests_per_second": 3457.6141326560078,
+    "wall_seconds": 0.11568670900032885
+  },
+  "cost_model": {
+    "cpu_dollars_per_hour_assumption": 0.05,
+    "excludes": "network, storage, observability backend, GPU, and external model fees",
+    "warm_estimated_cpu_cost_per_conversation_usd": 7.567708333333332e-10
+  },
+  "environment": {
+    "logical_cpus": 8,
+    "machine": "arm64",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.11.0"
+  },
+  "limitations": [
+    "In-process deterministic providers are not a production traffic model.",
+    "Process peak RSS includes interpreter and test harness memory.",
+    "Cost uses an explicit illustrative CPU-hour rate, not a cloud quote."
+  ],
+  "schema_version": "1.0",
+  "warm_shared_retriever": {
+    "cpu_seconds": 0.021794999999999995,
+    "escalations": 100,
+    "estimated_cpu_cost_per_conversation_usd": 7.567708333333332e-10,
+    "failures": 0,
+    "latency_mean_ms": 0.07588186504335681,
+    "latency_p50_ms": 0.04904200068267528,
+    "latency_p95_ms": 0.0619590000496828,
+    "latency_p99_ms": 0.2974170001834864,
+    "normalized_cpu_utilization": 0.13275279360507086,
+    "peak_rss_bytes": 34652160,
+    "requests": 400,
+    "throughput_requests_per_second": 19491.11904272663,
+    "wall_seconds": 0.020522166999398905
+  },
+  "workload": {
+    "concurrency": 8,
+    "external_services": false,
+    "iterations": 400,
+    "mix": "75% grounded PIN response, 25% policy escalation"
+  }
+}

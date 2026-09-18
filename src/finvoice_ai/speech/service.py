@@ -1,3 +1,4 @@
+from finvoice_ai.observability import METRICS, operation
 from finvoice_ai.speech.models import SpeechAnalysis
 from finvoice_ai.speech.ports import TranscriptionProvider
 from finvoice_ai.speech.vad import EnergyVoiceActivityDetector
@@ -18,9 +19,13 @@ class SpeechService:
         self._transcriber = transcriber
 
     def analyze(self, wav_data: bytes) -> SpeechAnalysis:
-        audio = self._loader.load(wav_data)
-        segments = self._vad.detect(audio)
-        transcription = self._transcriber.transcribe(audio, segments)
+        with operation("audio.decode"):
+            audio = self._loader.load(wav_data)
+        with operation("vad.detect"):
+            segments = self._vad.detect(audio)
+        with operation("asr.transcribe", model=type(self._transcriber).__name__):
+            transcription = self._transcriber.transcribe(audio, segments)
+        METRICS.increment("finvoice_asr_requests", {"model": transcription.model})
         return SpeechAnalysis(
             duration_seconds=audio.duration_seconds,
             segments=tuple(segments),
