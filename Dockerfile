@@ -10,6 +10,9 @@ COPY src ./src
 
 FROM base AS runtime
 RUN pip install --no-cache-dir .
+RUN addgroup --system finvoice && adduser --system --ingroup finvoice --home /nonexistent finvoice
+
+USER finvoice
 
 EXPOSE 8000
 
@@ -23,6 +26,9 @@ CMD ["pytest"]
 
 FROM base AS asr
 RUN pip install --no-cache-dir '.[asr]'
+RUN addgroup --system finvoice && adduser --system --ingroup finvoice --home /nonexistent finvoice
+
+USER finvoice
 
 EXPOSE 8000
 
