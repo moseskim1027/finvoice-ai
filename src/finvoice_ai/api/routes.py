@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 
 from finvoice_ai.application.conversation import ConversationService
 from finvoice_ai.config import Settings, get_settings
@@ -12,6 +12,7 @@ from finvoice_ai.infrastructure.local_providers import (
     TemplateResponseGenerator,
 )
 from finvoice_ai.infrastructure.retrieval import BM25Retriever
+from finvoice_ai.observability import METRICS, operation
 from finvoice_ai.speech.asr import AsrDependencyError, build_transcription_provider
 from finvoice_ai.speech.schemas import (
     SpeechAnalysisResponse,
@@ -31,6 +32,17 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/ready", tags=["operations"])
+def readiness() -> dict[str, str]:
+    load_default_documents()
+    return {"status": "ready"}
+
+
+@router.get("/metrics", tags=["operations"], include_in_schema=False)
+def metrics() -> Response:
+    return Response(METRICS.prometheus(), media_type="text/plain; version=0.0.4")
+
+
 @router.post(
     "/v1/conversations/respond",
     response_model=ConversationResponse,
@@ -46,7 +58,12 @@ def respond(
         generator=TemplateResponseGenerator(),
         store=InMemoryConversationStore(),
     )
-    return service.respond(request)
+    with operation("conversation.respond", session_id=request.session_id):
+        response = service.respond(request)
+    METRICS.increment("finvoice_conversation_decisions", {"decision": response.decision.value})
+    if response.reason:
+        METRICS.increment("finvoice_escalations", {"reason": response.reason})
+    return response
 
 
 @router.post(
@@ -71,7 +88,8 @@ async def analyze_audio(
             vad=EnergyVoiceActivityDetector(),
             transcriber=build_transcription_provider(settings),
         )
-        analysis = service.analyze(data)
+        with operation("speech.analyze"):
+            analysis = service.analyze(data)
     except AsrDependencyError as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

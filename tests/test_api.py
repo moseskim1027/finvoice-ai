@@ -14,6 +14,15 @@ def test_health() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_readiness_metrics_and_correlation_header() -> None:
+    ready = client.get("/ready", headers={"x-request-id": "correlation-123"})
+    metrics = client.get("/metrics")
+
+    assert ready.json() == {"status": "ready"}
+    assert ready.headers["x-request-id"] == "correlation-123"
+    assert "finvoice_http_requests_total" in metrics.text
+
+
 def test_conversation_can_respond() -> None:
     response = client.post(
         "/v1/conversations/respond",
