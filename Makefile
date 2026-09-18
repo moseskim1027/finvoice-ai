@@ -1,8 +1,9 @@
-.PHONY: audit-speech evaluate-retrieval evaluate-speech format lint run run-mcp test
+.PHONY: audit-speech evaluate-retrieval evaluate-speech format lint research-baselines run run-mcp test
 
 SPEECH_MANIFEST ?= data/speech-manifest.json
 SPEECH_DATASET_ROOT ?= data
 SPEECH_EVALUATION_ARGS ?= --split development
+RESEARCH_OUTPUT ?= reports/multimodal-intent-baselines.json
 
 audit-speech:
 	python -m finvoice_ai.evaluation.speech_integrity $(SPEECH_MANIFEST) --dataset-root $(SPEECH_DATASET_ROOT)
@@ -12,6 +13,9 @@ evaluate-retrieval:
 
 evaluate-speech:
 	python -m finvoice_ai.evaluation.speech_runner $(SPEECH_MANIFEST) --dataset-root $(SPEECH_DATASET_ROOT) $(SPEECH_EVALUATION_ARGS)
+
+research-baselines:
+	python -m finvoice_ai.research.experiment --manifest $(SPEECH_MANIFEST) --dataset-root $(SPEECH_DATASET_ROOT) --development-asr-report reports/development-base-beam1.json --test-asr-report reports/test-base-beam1.json --output $(RESEARCH_OUTPUT)
 
 format:
 	ruff format .

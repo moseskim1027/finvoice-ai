@@ -25,6 +25,12 @@ This question keeps the research contribution tied to a real operational
 decision. A model should not merely classify a conversation; it should know
 when confidence is too low and transfer the case safely.
 
+The first reproducible baseline study found no multimodal improvement on its
+small synthetic held-out set: late fusion selected text only, while feature
+concatenation underperformed the transcript model. See the
+[multimodal intent study](docs/multimodal-intent-study.md) for methods, results,
+calibration findings, and limitations.
+
 ## System architecture
 
 ```text

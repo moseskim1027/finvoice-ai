@@ -1,0 +1,141 @@
+{
+  "experiment_id": "multimodal-intent-baseline-v1",
+  "dataset": {
+    "name": "finvoice-local-synthetic-bilingual-v1",
+    "version": "1.0.0",
+    "train_cases": 30,
+    "validation_cases": 15,
+    "test_cases": 15,
+    "speaker_split": "voice-a/voice-b train; voice-c validation; voice-d test"
+  },
+  "reproducibility": {
+    "config_fingerprint": "ce3571dfc2f76504343239d6335bf91db0d6f35123f8032d615bcb83011a2a57",
+    "seed": 20260918,
+    "manifest_sha256": "db715da471a0a8dccce6da7589d14ad42366751bb0bd855334f44050cda7110a",
+    "command": "make research-baselines SPEECH_MANIFEST=data/speech-manifest.json SPEECH_DATASET_ROOT=data",
+    "machine": "arm64",
+    "python": "3.11.0",
+    "numpy": "2.4.6",
+    "scikit_learn": "1.9.1",
+    "scipy": "1.17.1",
+    "acoustic_feature_version": "summary-v1",
+    "frozen_embedding_adapter": "microsoft/wavlm-base-plus@8d0b7c7",
+    "frozen_embedding_result_reported": false
+  },
+  "selection": {
+    "selected_on": "validation only",
+    "text_c": 0.1,
+    "acoustic_c": 10.0,
+    "concatenated_c": 10.0,
+    "late_fusion_text_weight": 1.0,
+    "temperatures": {
+      "text": 0.5,
+      "acoustic": 3.0,
+      "late_fusion": 0.5,
+      "concatenated_fusion": 1.0
+    },
+    "abstention_thresholds": {
+      "text": 0.0,
+      "acoustic": 0.6,
+      "late_fusion": 0.0,
+      "concatenated_fusion": 0.6
+    },
+    "minimum_validation_accuracy_for_abstention": 0.8
+  },
+  "held_out_test": {
+    "majority": {
+      "accuracy": 0.2,
+      "macro_f1": 0.0666666667,
+      "balanced_accuracy": 0.2,
+      "brier_score": 1.6,
+      "expected_calibration_error": 0.8,
+      "escalation_precision": 0.6,
+      "escalation_recall": 1.0,
+      "artifact_bytes": 193
+    },
+    "text": {
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "balanced_accuracy": 1.0,
+      "brier_score": 0.6812242417,
+      "expected_calibration_error": 0.7373066707,
+      "escalation_precision": 1.0,
+      "escalation_recall": 1.0,
+      "artifact_bytes": 119959,
+      "selected_coverage": 1.0,
+      "selected_accuracy": 1.0
+    },
+    "acoustic": {
+      "accuracy": 0.4,
+      "macro_f1": 0.3898701299,
+      "balanced_accuracy": 0.4,
+      "brier_score": 0.7117702783,
+      "expected_calibration_error": 0.1611224234,
+      "escalation_precision": 0.6428571429,
+      "escalation_recall": 1.0,
+      "artifact_bytes": 2062,
+      "selected_coverage": 0.0,
+      "selected_accuracy": 0.0
+    },
+    "late_fusion": {
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "balanced_accuracy": 1.0,
+      "brier_score": 0.6812242417,
+      "expected_calibration_error": 0.7373066707,
+      "escalation_precision": 1.0,
+      "escalation_recall": 1.0,
+      "artifact_bytes": 122021,
+      "selected_coverage": 1.0,
+      "selected_accuracy": 1.0
+    },
+    "concatenated_fusion": {
+      "accuracy": 0.8,
+      "macro_f1": 0.8076190476,
+      "balanced_accuracy": 0.8,
+      "brier_score": 0.3430140064,
+      "expected_calibration_error": 0.1860096442,
+      "escalation_precision": 0.8888888889,
+      "escalation_recall": 0.8888888889,
+      "artifact_bytes": 26362,
+      "selected_coverage": 0.6666666667,
+      "selected_accuracy": 0.9
+    }
+  },
+  "paired_accuracy_bootstrap": {
+    "text_vs_late_fusion": {
+      "candidate_minus_text": 0.0,
+      "bootstrap_95_ci": [0.0, 0.0],
+      "samples": 2000
+    },
+    "text_vs_concatenated_fusion": {
+      "candidate_minus_text": -0.2,
+      "bootstrap_95_ci": [-0.4, 0.0],
+      "samples": 2000
+    }
+  },
+  "validation_ablations": {
+    "asr_text_macro_f1": 1.0,
+    "reference_text_macro_f1": 1.0,
+    "acoustic_all_macro_f1": 0.2738095238,
+    "acoustic_without_timing_macro_f1": 0.1904761905,
+    "acoustic_without_energy_macro_f1": 0.1735064935,
+    "acoustic_without_frame_statistics_macro_f1": 0.1714285714
+  },
+  "local_performance": {
+    "units": "seconds unless otherwise noted",
+    "majority_training_selection": 0.000020,
+    "majority_test_inference": 0.000012,
+    "text_training_selection": 0.811400,
+    "text_test_inference": 0.002900,
+    "acoustic_training_selection": 0.020870,
+    "acoustic_test_inference": 0.000417,
+    "late_fusion_training_selection": 0.018343,
+    "late_fusion_test_inference": 0.000023,
+    "concatenated_training_selection": 0.036344,
+    "concatenated_test_inference": 0.001088,
+    "total": 1.805488,
+    "peak_rss_bytes": 142000128
+  },
+  "conclusion": "No multimodal improvement was demonstrated. Late fusion selected text weight 1.0 and tied text; concatenated fusion underperformed text."
+}
