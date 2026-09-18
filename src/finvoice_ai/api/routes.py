@@ -14,6 +14,7 @@ from finvoice_ai.infrastructure.local_providers import (
 from finvoice_ai.infrastructure.retrieval import BM25Retriever
 from finvoice_ai.observability import METRICS, operation
 from finvoice_ai.speech.asr import AsrDependencyError, build_transcription_provider
+from finvoice_ai.speech.ports import TranscriptionUnavailableError
 from finvoice_ai.speech.schemas import (
     SpeechAnalysisResponse,
     SpeechSegmentResponse,
@@ -90,7 +91,7 @@ async def analyze_audio(
         )
         with operation("speech.analyze"):
             analysis = service.analyze(data)
-    except AsrDependencyError as error:
+    except (AsrDependencyError, TranscriptionUnavailableError) as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(error),
