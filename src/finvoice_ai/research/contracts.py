@@ -43,8 +43,8 @@ class ExperimentConfig(BaseModel):
     text_min_document_frequency: int = Field(default=1, ge=1)
     regularization_c: float = Field(default=1.0, gt=0.0)
     maximum_iterations: int = Field(default=1_000, ge=1)
-    calibration_method: Literal["none", "sigmoid", "isotonic"] = "sigmoid"
-    abstention_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
+    calibration_method: Literal["none", "temperature", "sigmoid", "isotonic"] = "temperature"
+    abstention_minimum_accuracy: float = Field(default=0.8, ge=0.0, le=1.0)
     frozen_embedding_model: str = "microsoft/wavlm-base-plus@8d0b7c7"
     acoustic_feature_version: str = "summary-v1"
 

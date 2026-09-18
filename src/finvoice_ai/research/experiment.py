@@ -116,7 +116,11 @@ def run_experiment(
         for name, predictions in validation_sets.items()
     }
     abstention_thresholds = {
-        name: select_abstention_threshold(predictions, validation)
+        name: select_abstention_threshold(
+            predictions,
+            validation,
+            minimum_accuracy=config.abstention_minimum_accuracy,
+        )
         for name, predictions in calibrated_validation.items()
     }
     calibrated_test = {
@@ -371,7 +375,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--test-asr-report", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=20260918)
-    parser.add_argument("--abstention-threshold", type=float, default=0.6)
+    parser.add_argument("--abstention-minimum-accuracy", type=float, default=0.8)
     return parser
 
 
@@ -382,7 +386,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         dataset_version="1.0.0",
         manifest_sha256=manifest_sha256(args.manifest),
         seed=args.seed,
-        abstention_threshold=args.abstention_threshold,
+        abstention_minimum_accuracy=args.abstention_minimum_accuracy,
     )
     report = run_experiment(
         args.manifest,
