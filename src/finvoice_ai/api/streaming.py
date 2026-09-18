@@ -6,6 +6,7 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from finvoice_ai.observability import METRICS, operation
 from finvoice_ai.streaming.models import ErrorEvent, PcmChunk, StreamEvent
 from finvoice_ai.streaming.session import StreamingSessionManager
 
@@ -17,8 +18,11 @@ async def stream_audio(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()
     manager: StreamingSessionManager = websocket.app.state.streaming_manager
     try:
-        session = manager.get_or_create(session_id)
+        with operation("streaming.session.open"):
+            session = manager.get_or_create(session_id)
+        METRICS.set_gauge("finvoice_streaming_active_sessions", manager.active_count)
     except (RuntimeError, ValueError) as error:
+        METRICS.increment("finvoice_streaming_rejections", {"reason": "session_limit"})
         await websocket.send_json(_error_payload(session_id, "", "session_rejected", str(error)))
         await websocket.close(code=1013)
         return
@@ -38,12 +42,15 @@ async def stream_audio(websocket: WebSocket, session_id: str) -> None:
                     )
                 )
                 continue
-            for event in session.accept(chunk):
+            with operation("streaming.chunk.accept"):
+                events = session.accept(chunk)
+            for event in events:
                 await websocket.send_json(_event_payload(event))
     except WebSocketDisconnect:
         pass
     finally:
         manager.remove(session_id)
+        METRICS.set_gauge("finvoice_streaming_active_sessions", manager.active_count)
 
 
 def _decode_chunk(payload: dict[str, Any], session_id: str) -> PcmChunk:

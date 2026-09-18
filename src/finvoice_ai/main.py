@@ -9,6 +9,7 @@ from finvoice_ai.api.streaming import router as streaming_router
 from finvoice_ai.config import get_settings
 from finvoice_ai.observability import (
     METRICS,
+    BoundedStreamingMetrics,
     configure_logging,
     configure_tracing,
     new_request_id,
@@ -32,7 +33,8 @@ def create_app() -> FastAPI:
     application.include_router(router)
     application.include_router(streaming_router)
     application.state.streaming_manager = StreamingSessionManager(
-        lambda: OfflineStreamingTranscriptionAdapter(build_transcription_provider(settings))
+        lambda: OfflineStreamingTranscriptionAdapter(build_transcription_provider(settings)),
+        metrics=BoundedStreamingMetrics(),
     )
 
     @application.middleware("http")

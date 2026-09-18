@@ -16,6 +16,7 @@ from finvoice_ai.domain.models import (
     Decision,
     ProviderMetadata,
 )
+from finvoice_ai.observability import METRICS, operation
 
 
 class ConversationService:
@@ -35,7 +36,8 @@ class ConversationService:
 
     def respond(self, request: ConversationRequest) -> ConversationResponse:
         request_id = str(uuid4())
-        decision = self._policy.evaluate(request.message, request.confidence)
+        with operation("policy.evaluate"):
+            decision = self._policy.evaluate(request.message, request.confidence)
 
         if decision.should_escalate:
             response = ConversationResponse(
@@ -47,9 +49,18 @@ class ConversationService:
             )
         else:
             try:
-                context = self._retriever.retrieve(request.message)
-                generation = self._generator.generate(request.message, context)
-                validation = validate_citations(generation.cited_document_ids, context)
+                with operation("retrieval.retrieve"):
+                    context = self._retriever.retrieve(request.message)
+                METRICS.increment(
+                    "finvoice_retrieval_results", {"has_context": str(bool(context)).lower()}
+                )
+                with operation("generation.generate"):
+                    generation = self._generator.generate(request.message, context)
+                with operation("grounding.validate"):
+                    validation = validate_citations(generation.cited_document_ids, context)
+                METRICS.increment(
+                    "finvoice_grounding_results", {"valid": str(validation.is_valid).lower()}
+                )
             except ProviderUnavailableError:
                 response = ConversationResponse(
                     request_id=request_id,
@@ -108,13 +119,14 @@ class ConversationService:
                         ),
                     )
 
-        self._store.append(
-            ConversationRecord(
-                request_id=request_id,
-                session_id=request.session_id,
-                user_message=request.message,
-                assistant_message=response.message,
-                decision=response.decision.value,
+        with operation("persistence.append"):
+            self._store.append(
+                ConversationRecord(
+                    request_id=request_id,
+                    session_id=request.session_id,
+                    user_message=request.message,
+                    assistant_message=response.message,
+                    decision=response.decision.value,
+                )
             )
-        )
         return response

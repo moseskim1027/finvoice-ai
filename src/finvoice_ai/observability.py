@@ -137,6 +137,11 @@ METRICS = MetricRegistry()
 SPAN_EXPORTER = SanitizedSpanExporter()
 
 
+class BoundedStreamingMetrics:
+    def observe(self, name: str, value: float, tags: dict[str, str]) -> None:
+        METRICS.observe(f"finvoice_streaming_{name}", value)
+
+
 def configure_tracing() -> None:
     if isinstance(trace.get_tracer_provider(), TracerProvider):
         return
