@@ -1,6 +1,7 @@
 # FinVoice AI
 
 [![CI](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 FinVoice AI is a research-to-production portfolio project for a bilingual
 financial-support voice and text agent. It is designed to demonstrate speech
@@ -701,5 +702,4 @@ research environment, not a production financial service.
 
 ## License
 
-No license has been selected yet. All rights are reserved until a license is
-added explicitly.
+Licensed under the [MIT License](LICENSE).
