@@ -1,19 +1,35 @@
 # FinVoice AI
 
 [![CI](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/moseskim1027/finvoice-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 FinVoice AI is a research-to-production portfolio project for a bilingual
 financial-support voice and text agent. It is designed to demonstrate speech
-AI, grounded LLM applications, safe tool use, human escalation, evaluation,
+AI, grounded response systems, safe tool use, human escalation, evaluation,
 observability, and inference-cost engineering in one coherent system.
 
-The project is intentionally more than a chatbot demo. Its goal is to produce
-credible evidence for both production ML engineering and applied research:
+The repository combines production-style service boundaries with reproducible
+applied-research evidence:
 
 - a deployable, observable support service with explicit safety boundaries;
 - a reproducible speech and language evaluation suite;
 - a publication-style study of robustness, calibration, and escalation;
 - measurable quality, latency, reliability, and cost tradeoffs.
+
+## What is included
+
+| Area | Implementation and evidence |
+| --- | --- |
+| Support service | FastAPI conversation and audio endpoints, deterministic policy, grounded responses, citations, and safe escalation |
+| Speech | Bounded PCM WAV ingestion, energy VAD, optional Faster Whisper, governed benchmark, and WER/CER reporting |
+| Streaming | Ordered chunks, endpointing, simulated partials, interruption, limits, and WebSocket transport |
+| Tools | MCP server, fixed synthetic tool registry, authentication/scope/confirmation policy, and audit events |
+| Research | Transcript, acoustic, and fusion baselines; calibration, abstention, ablations, slices, and bootstrap intervals |
+| Operations | Correlated JSON logs, OpenTelemetry spans, bounded metrics, readiness, fault injection, SLOs, and load/cost evidence |
+
+The default providers are local and deterministic, so the complete behavioral
+and safety suite runs without external services. Optional Faster Whisper
+evaluation is isolated behind an extra dependency and Docker profile.
 
 ## Research question
 
@@ -31,7 +47,7 @@ concatenation underperformed the transcript model. See the
 [multimodal intent study](docs/multimodal-intent-study.md) for methods, results,
 calibration findings, and limitations.
 
-The final operability milestone adds correlated JSON logs, bounded service
+The operability layer adds correlated JSON logs, bounded service
 metrics, OpenTelemetry spans, health/readiness checks, fault injection, and a
 deterministic load/cost benchmark. See the
 [production evidence](docs/production-evidence.md),
@@ -42,53 +58,40 @@ portfolio environment only and do not imply real-bank connectivity.
 ## System architecture
 
 ```text
- Voice caller                         Text user
-      |                                   |
-      v                                   v
- [VAD + streaming ASR]              [Chat gateway]
-      |                                   |
-      +----------------+------------------+
-                       v
-              [Conversation service]
-              - session state
-              - policy checks
-              - PII redaction
-              - confidence/abstention
-                       |
-          +------------+-------------+
-          |                          |
-          v                          v
- [RAG over approved docs]      [MCP tool gateway]
- - hybrid retrieval           - account simulator
- - citations                  - ticket creation
- - versioned policies         - authenticated actions
-          |                          |
-          +------------+-------------+
-                       v
-                 [LLM router]
-          small model <-> large model
-                       |
-          +------------+-------------+
-          |                          |
-          v                          v
- [Text response / TTS]       [Human escalation]
-                              + summary/reason
+ Text request          WAV upload          PCM chunks          MCP call
+      |                    |                    |                  |
+      v                    v                    v                  v
+ [FastAPI route]    [WAV + VAD + ASR]   [stream session]   [tool gateway]
+      |                    |                    |            auth / confirm
+      +--------------------+--------------------+------------------+
+                           |
+                           v
+                  [conversation service]
+                  policy / confidence
+                           |
+               +-----------+-----------+
+               |                       |
+               v                       v
+       [BM25 approved docs]      [safe escalation]
+       citations + validation
+               |
+               v
+       [deterministic response]
 
- Every component -> OpenTelemetry -> metrics, traces, logs
- Evaluation suite -> CI quality gate -> canary -> production
+ Correlation context -> JSON logs + bounded metrics + OpenTelemetry spans
+ Versioned evaluations -> CI tests + aggregate research/operations reports
 ```
 
 The current implementation provides a transport-independent conversation
-service, typed ports for retrieval, generation, safety policy, and conversation
-storage, a repository-controlled Markdown knowledge base, deterministic BM25
-retrieval, auditable response metadata, citation validation, and safe escalation
-for missing context or unavailable providers. Real model providers, vector
-retrieval and telemetry remain future milestones. The initial speech foundation
-validates PCM WAV uploads, detects voice activity, exposes a replaceable ASR
-provider contract, and reports WER/CER metrics. A deterministic streaming layer
-adds ordered PCM chunk ingestion, endpointing, partial/final transcript events,
-bounded session state, and response interruption. A standalone MCP server exposes
-synthetic demo tools through the official stable
+service, typed ports for retrieval, generation, policy, and storage, a
+repository-controlled Markdown knowledge base, deterministic BM25 retrieval,
+citation validation, and safe escalation for missing context or unavailable
+providers. The speech path validates PCM WAV uploads, detects voice activity,
+exposes a replaceable ASR provider, and reports WER/CER metrics. A deterministic
+streaming layer adds ordered chunk ingestion, endpointing, partial/final events,
+bounded session state, and response interruption. Correlated logs, metrics, and
+OpenTelemetry spans cover the critical local paths. A standalone MCP server
+exposes synthetic demo tools through the official stable
 [MCP Python SDK](https://py.sdk.modelcontextprotocol.io/).
 
 ## Current orchestration boundary
@@ -468,9 +471,9 @@ The current partial implementation periodically invokes the existing offline
 transcription provider over accumulated audio. It is simulated partial
 transcription, not genuine token streaming. Its purpose is to prove ordering,
 state, endpoint, cancellation, and transport semantics before choosing a live
-streaming ASR provider. Timing hooks expose time to speech start, time to first
-partial, endpoint delay, final transcript latency, and interruption latency;
-the production-observability milestone will connect them to a metrics backend.
+streaming ASR provider. Timing hooks record time to speech start, time to first
+partial, endpoint delay, final transcript latency, and interruption latency in
+the bounded service metrics registry.
 
 Run the deterministic WebSocket demonstration through its chunked PCM fixture:
 
@@ -485,101 +488,75 @@ stale completion rejection, and isolation between concurrent sessions.
 ## Research pipeline
 
 ```text
- [Audio + transcript + labels]
-             |
-      [Data statement]
- consent / language / noise / subgroup coverage
-             |
-     +-------+---------+
-     |                 |
-     v                 v
- [SSL speech model] [Text transformer]
- WavLM/HuBERT       transcript encoder
-     |                 |
-     +-------+---------+
-             v
-      [Fusion + prediction]
-             |
-     +-------+---------+
-     |                 |
-     v                 v
- [Calibration]   [Abstain/escalate]
-     |                 |
-     +-------+---------+
-             v
- [Robustness and fairness evaluation]
- accent / noise / device / subgroup / shift
-             |
-             v
- [Ablations + confidence intervals + report]
+ [Governed audio + ASR transcript + policy labels]
+                         |
+            +------------+------------+
+            |                         |
+            v                         v
+ [character TF-IDF]       [waveform summary features]
+            |                         |
+            +------------+------------+
+                         |
+          text / acoustic / late / concatenated models
+                         |
+          temperature scaling + selective prediction
+                         |
+       slices + ablations + paired bootstrap intervals
+                         |
+              aggregate report + limitations
 ```
 
 ## Evaluation strategy
 
-The project will report system and research metrics together.
+The repository reports system and research metrics together while keeping
+service reliability objectives separate from model-quality acceptance gates.
 
 ### Speech and research metrics
 
 - word error rate and intent accuracy;
 - expected calibration error and Brier score;
 - escalation precision, recall, and risk-coverage curves;
-- performance across language, code-switching, accent, noise, and device slices;
+- performance across language mode, code-switching, noise, device, and speaker slices;
 - ablations for acoustic-only, transcript-only, and fused representations;
 - bootstrap confidence intervals and a documented error taxonomy.
 
 ### Product and service metrics
 
-- task-completion and grounded-answer rates;
-- containment, human-transfer, repeat-contact, and safe-abstention rates;
-- p50 and p95 end-to-end latency;
-- availability, timeout, and tool-failure rates;
-- cost per conversation and cost per successfully resolved case.
+- request rate, errors, and duration;
+- retrieval, grounded-answer, abstention, and escalation rates;
+- ASR latency and real-time factor;
+- MCP denial/failure and active-streaming-session metrics;
+- p50, p95, and p99 benchmark latency, throughput, CPU, memory, and estimated
+  CPU cost per conversation.
 
 ### Safety and responsible AI
 
 - use synthetic, consented, or appropriately licensed data only;
-- minimize and redact personally identifiable information;
+- do not use real customer data and do not log request bodies, transcripts,
+  audio, secrets, or account identifiers;
 - treat acoustic behavior signals as uncertain features, not psychological fact;
 - include subgroup, calibration, and distribution-shift evaluation;
 - use explicit policies and human review for sensitive financial actions;
 - preserve tool-call provenance and auditable escalation reasons.
 
-## Portfolio milestones
+## Evidence and documentation
 
-### Milestone 1 - Service foundation
+- [Bilingual benchmark design](docs/bilingual-benchmark-design.md),
+  [workflow](docs/bilingual-benchmark-workflow.md), and
+  [dataset-card template](docs/speech-dataset-card-template.md)
+- [Bilingual ASR baseline](docs/bilingual-asr-baseline.md) and
+  [speech error taxonomy](docs/speech-error-taxonomy.md)
+- [Multimodal intent study](docs/multimodal-intent-study.md) with the negative
+  and inconclusive fusion result stated explicitly
+- [Production evidence](docs/production-evidence.md),
+  [service SLOs](docs/service-slos.md),
+  [incident runbook](docs/incident-runbook.md), and
+  [scripted demo](docs/demo-runbook.md)
 
-- FastAPI application with typed request and response schemas;
-- deterministic risk-policy and confidence-based escalation;
-- configuration, structured package layout, health endpoint, and tests;
-- container and local developer workflow.
-
-### Milestone 2 - Text support agent
-
-- approved-document retrieval with citations;
-- policy-constrained LLM orchestration;
-- MCP tools for read-only account simulation and ticket creation;
-- prompt-injection tests and human-handoff summaries.
-
-### Milestone 3 - Speech pipeline
-
-- streaming or simulated-streaming ASR and TTS;
-- voice activity detection, endpointing, and interruption handling;
-- English/Filipino and code-switched evaluation data;
-- self-supervised speech embeddings and calibrated confidence.
-
-### Milestone 4 - Research study
-
-- transcript-only, acoustic-only, and multimodal baselines;
-- robustness and subgroup evaluation;
-- ablations, confidence intervals, limitations, and reproducibility artifacts;
-- publication-style technical report.
-
-### Milestone 5 - Production evidence
-
-- OpenTelemetry traces, structured logs, and operational dashboards;
-- SLOs, alerts, fault injection, canary release, and incident runbook;
-- model routing, caching, prompt compression, and cost benchmarking;
-- quality-cost-latency Pareto analysis.
+Machine-readable aggregate results live beside the evaluation and research
+code under `src/finvoice_ai/evaluation/data/results/` and
+`src/finvoice_ai/research/results/`. Raw audio, model weights, and detailed
+reports containing utterances remain outside Git.
 
 ## Repository layout
 
@@ -589,12 +566,17 @@ finvoice-ai/
 |   |-- api/             # HTTP transport
 |   |-- application/     # Orchestration service and provider ports
 |   |-- domain/          # Request models and deterministic policy
-|   |-- evaluation/      # Retrieval benchmark and versioned cases
+|   |-- evaluation/      # Retrieval, speech, and production benchmarks/results
 |   |-- infrastructure/  # Local provider implementations
+|   |-- research/        # Intent/acoustic/fusion experiments and aggregate result
 |   |-- speech/          # WAV, VAD, ASR contracts, and response schemas
 |   |-- streaming/       # Chunk events, endpointing, sessions, and interruption
 |   |-- tools/           # Tool policy, gateway, handlers, and audit models
+|   |-- observability.py # JSON logging, metrics, and OpenTelemetry plumbing
+|   |-- resilience.py    # Deterministic provider fault injection
 |   `-- mcp_server.py    # Official SDK protocol adapter
+|-- docs/                # Dataset, study, SLO, evidence, demo, and incident reports
+|-- scripts/             # Deterministic synthetic benchmark generation
 |-- tests/
 |   `-- scenarios/       # Versioned conversation behavior cases
 |-- .env.example         # Safe local configuration template
@@ -656,7 +638,12 @@ The response includes the decision evidence needed for evaluation and tracing:
 
 Run the versioned behavior suite with `make test`. Its cases cover grounded
 responses, low-confidence abstention, sensitive actions, missing approved
-context, malformed input, and provider failure.
+context, malformed input, provider failure, tool authorization, streaming state,
+research leakage controls, telemetry safety, and deterministic load evidence.
+
+Operational endpoints are available at `/health`, `/ready`, and `/metrics`.
+Run `make production-evidence` to regenerate the committed local load and cost
+report, or `make observable-stack` to start the healthchecked Docker service.
 
 ### Docker alternative
 
@@ -680,7 +667,9 @@ docker compose run --rm test
 docker compose run --rm evaluate-retrieval
 ```
 
-The equivalent MCP command is `docker compose run --rm mcp`. To run the
+The runtime container uses a non-root user, a readiness healthcheck, PID 1 init,
+a graceful-stop interval, and `no-new-privileges`. The equivalent MCP command is
+`docker compose run --rm mcp`. To run the
 optional offline ASR image, use `docker compose --profile asr up --build asr`.
 
 The test image installs development dependencies and contains the test suite;
@@ -691,12 +680,16 @@ weights on every ASR container start.
 
 ## Current scope and limitations
 
-This repository currently uses deterministic retrieval and generation so the
-service contract and safety decisions can be tested before external models are
-added.
-It does not yet connect to a bank, process real customer data, perform financial
-transactions, or infer emotions. It is a portfolio and research environment,
-not a production financial service.
+This repository uses deterministic retrieval and generation so service
+contracts and safety decisions remain reproducible without external providers.
+Faster Whisper is optional; the committed speech and research evidence uses a
+small synthetic benchmark with explicit representation and validity limits.
+
+The project does not connect to a bank, process real customer data, perform
+financial transactions, provide production authentication, retain durable
+audit records, or infer emotions. Metrics and traces use an in-process bounded
+registry rather than an external telemetry backend. This is a portfolio and
+research environment, not a production financial service.
 
 ## Development principles
 
@@ -709,5 +702,4 @@ not a production financial service.
 
 ## License
 
-No license has been selected yet. All rights are reserved until a license is
-added explicitly.
+Licensed under the [MIT License](LICENSE).
