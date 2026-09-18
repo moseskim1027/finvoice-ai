@@ -6,6 +6,7 @@ from finvoice_ai.research.contracts import INTENT_LABELS, ResearchCase
 from finvoice_ai.research.evaluation import (
     evaluate_predictions,
     risk_coverage_curve,
+    select_abstention_threshold,
     select_temperature,
     slice_metrics,
     temperature_scale,
@@ -67,5 +68,6 @@ def test_metrics_calibration_and_selective_prediction() -> None:
     assert metrics["macro_f1"] == pytest.approx(1 / 3)
     assert metrics["confusion_matrix"] == [[1, 0], [1, 0]]
     assert temperature in {0.5, 0.75, 1.0, 1.5, 2.0, 3.0}
+    assert select_abstention_threshold(calibrated, cases, minimum_accuracy=0.9) == 0.7
     assert curve[0]["coverage"] == 1.0
     assert slice_metrics(predictions, cases)[0]["case_count"] == 2

@@ -145,6 +145,25 @@ def select_temperature(predictions: PredictionSet) -> float:
     )
 
 
+def select_abstention_threshold(
+    predictions: PredictionSet,
+    cases: list[ResearchCase],
+    *,
+    minimum_accuracy: float = 0.8,
+) -> float:
+    candidates = (0.0, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+    eligible = []
+    for threshold in candidates:
+        metrics = evaluate_predictions(
+            predictions,
+            cases,
+            abstention_threshold=threshold,
+        )
+        if metrics["coverage"] > 0.0 and metrics["accuracy"] >= minimum_accuracy:
+            eligible.append((metrics["coverage"], -threshold, threshold))
+    return max(eligible)[2] if eligible else 0.0
+
+
 def _negative_log_likelihood(predictions: PredictionSet) -> float:
     indexes = {label: index for index, label in enumerate(predictions.classes)}
     return -sum(
