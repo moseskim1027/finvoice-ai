@@ -14,6 +14,14 @@ def test_health() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_demo_console_is_available() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "FinVoice AI" in response.text
+    assert "/static/app.js" in response.text
+
+
 def test_readiness_metrics_and_correlation_header() -> None:
     ready = client.get("/ready", headers={"x-request-id": "correlation-123"})
     metrics = client.get("/metrics")
