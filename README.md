@@ -434,12 +434,7 @@ event for every state change:
         |                   |
         v                   v
 [simulated partial]    [final transcript]
- offline ASR rerun       response generation
-                              |
-                       new speech / barge-in
-                              |
-                              v
-                       [cancel response once]
+ offline ASR rerun
 ```
 
 Send each chunk as JSON. `pcm_s16le_base64` contains raw PCM samples, not a WAV
@@ -455,11 +450,11 @@ container:
 }
 ```
 
-Events use stable `type` discriminators: `accepted`, `speech_started`,
-`partial`, `finalized`, `interrupted`, and `error`. Sequence numbers begin at
-zero for each utterance. Repeated sequence numbers are acknowledged as
-duplicates without appending audio; missing or out-of-order numbers are
-rejected. A new utterance also begins at sequence zero.
+The WebSocket emits `accepted`, `speech_started`, `partial`, `finalized`, and
+`error` events. Sequence numbers begin at zero for each utterance. Repeated
+sequence numbers are acknowledged as duplicates without appending audio;
+missing or out-of-order numbers are rejected. A new utterance also begins at
+sequence zero.
 
 The default endpoint detector requires 60 ms of speech, finalizes after 300 ms
 of trailing silence, and forcibly finalizes at 30 seconds. Buffers are capped at
@@ -470,10 +465,16 @@ defaults live in `StreamingConfig` and tests use a fake clock.
 The current partial implementation periodically invokes the existing offline
 transcription provider over accumulated audio. It is simulated partial
 transcription, not genuine token streaming. Its purpose is to prove ordering,
-state, endpoint, cancellation, and transport semantics before choosing a live
-streaming ASR provider. Timing hooks record time to speech start, time to first
-partial, endpoint delay, final transcript latency, and interruption latency in
-the bounded service metrics registry.
+state, endpointing, and transport semantics before choosing a live streaming
+ASR provider. Timing hooks record time to speech start, time to first partial,
+endpoint delay, and final transcript latency in the bounded service metrics
+registry.
+
+The streaming session object also includes transport-independent response
+lifecycle and barge-in primitives (`start_response`, `complete_response`, and
+an `interrupted` event). The current WebSocket route does not yet start a
+response after finalization, so clients should not expect an `interrupted`
+event from that route.
 
 Run the deterministic WebSocket demonstration through its chunked PCM fixture:
 
@@ -762,14 +763,11 @@ therefore be treated as a contract fixture, not a model-quality result.
                          |
                          v
 [PCM WAV validation + VAD] --> [Faster Whisper: small model, CPU int8]
-                         |                         |
-                         |                         v
-                         |                 transcript + language + confidence
-                         |                         |
-                         +--> [approved retrieval] --> [optional local small instruct model]
-                                                          |
-                                                          v
-                                     citation validation + policy + human escalation
+                         |
+                         v
+                transcript + language + confidence
+
+[approved retrieval] --> [template generator] --> [citation validation + policy + escalation]
 ```
 
 Run the optional local ASR service with:
@@ -792,11 +790,11 @@ cover the following layers:
 | Grounded generation | Approved-context questions, paraphrases, hard negatives, and missing-context cases | Citation validity, abstention/escalation rate, latency, and cost |
 | Safety | Low confidence, sensitive actions, malformed requests, and unavailable providers | Decision/reason and audit-safe trace fields |
 
-An optional local small instruct model should remain behind the existing
-generator interface and receive only approved retrieved context. Use a fixed
-model version and low or zero temperature for repeatable safety evaluation;
-vary the audio and questions rather than relying on sampling randomness to make
-the demonstration appear dynamic.
+The only implemented response generator is `local-template-v1`, which returns
+approved retrieved content deterministically. A future model-backed generator
+should remain behind the existing generator interface, receive only approved
+retrieved context, and use a fixed version plus controlled decoding for safety
+evaluation.
 
 ### Production replacement boundary
 
