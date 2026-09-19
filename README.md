@@ -664,6 +664,14 @@ deterministic conversation endpoint as the documented curl example and does
 not add a browser build step, external model download, or persistent storage.
 `make demo` is a shorthand for this containerized local experience.
 
+Below the conversation console, the guided component cards exercise three
+existing local interfaces: generated synthetic PCM WAV sent to
+`/v1/audio/analyze`, ordered PCM chunks sent over `/v1/audio/stream/{session}`,
+and synthetic tool-policy calls through `/v1/demo/tools/{tool}`. The latter is
+an HTTP inspector for the same fixed tool definitions used by the stdio MCP
+server; it never connects to an external account or accepts caller-provided
+identity scopes.
+
 ### Local simulation request flow
 
 ![FinVoice AI local simulation console](docs/sim.gif)

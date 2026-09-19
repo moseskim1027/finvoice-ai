@@ -60,7 +60,13 @@
         </div>
       </section>
 
-      <footer><span>Portfolio / research environment</span><span>Deterministic local providers · In-memory telemetry</span></footer>
+      <section class="component-showcase" aria-label="Component demos">
+        <article class="component-card"><p class="eyebrow">SPEECH / WAV + VAD</p><h2>Generate a local audio sample</h2><p>Creates synthetic PCM WAV in your browser, then sends it to the bounded analysis endpoint.</p><button id="analyze-speech" class="action" type="button">Analyze synthetic speech</button><pre id="speech-result">Awaiting sample…</pre></article>
+        <article class="component-card"><p class="eyebrow">STREAMING / WEBSOCKET</p><h2>Watch endpointing events</h2><p>Sends ordered PCM chunks to the streaming route and displays its live event sequence.</p><button id="run-stream" class="action" type="button">Run stream simulation</button><pre id="stream-result">Awaiting stream…</pre></article>
+        <article class="component-card"><p class="eyebrow">MCP / TOOL POLICY</p><h2>Inspect synthetic tools</h2><p>Exercises the same fixed tool registry and confirmation rule exposed by the stdio MCP server.</p><div class="tool-actions"><button id="read-tool" class="action" type="button">Read DEMO-001</button><button id="write-tool" class="quiet-button bordered" type="button">Create ticket</button></div><pre id="tool-result">Awaiting tool call…</pre></article>
+      </section>
+
+      <footer><span>Portfolio / research environment</span><span>Deterministic local providers · In-memory telemetry · Synthetic tools only</span></footer>
     </main>
     <script src="/static/app.js"></script>
   </body>
