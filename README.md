@@ -666,6 +666,8 @@ not add a browser build step, external model download, or persistent storage.
 
 ### Local simulation request flow
 
+![FinVoice AI local simulation console](docs/sim.gif)
+
 The browser console is a thin client for the existing local conversation API;
 it does not make decisions or generate answers itself.
 
