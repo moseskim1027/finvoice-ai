@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from finvoice_ai import __version__
+from finvoice_ai.api.demo_tools import router as demo_tools_router
 from finvoice_ai.api.routes import router
 from finvoice_ai.api.streaming import router as streaming_router
 from finvoice_ai.config import get_settings
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     )
     application.include_router(router)
     application.include_router(streaming_router)
+    application.include_router(demo_tools_router)
     application.mount("/static", StaticFiles(directory="src/finvoice_ai/static"), name="static")
 
     @application.get("/", include_in_schema=False)

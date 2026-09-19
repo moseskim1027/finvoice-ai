@@ -22,6 +22,21 @@ def test_demo_console_is_available() -> None:
     assert "/static/app.js" in response.text
 
 
+def test_demo_tool_inspector_enforces_confirmation() -> None:
+    denied = client.post(
+        "/v1/demo/tools/create_demo_support_ticket",
+        json={"arguments": {"session_id": "demo", "category": "technical"}},
+    )
+    allowed = client.post(
+        "/v1/demo/tools/create_demo_support_ticket",
+        json={"arguments": {"session_id": "demo", "category": "technical"}, "confirmed": True},
+    )
+
+    assert denied.status_code == 403
+    assert allowed.status_code == 200
+    assert allowed.json()["content"]["synthetic"] is True
+
+
 def test_readiness_metrics_and_correlation_header() -> None:
     ready = client.get("/ready", headers={"x-request-id": "correlation-123"})
     metrics = client.get("/metrics")
