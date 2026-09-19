@@ -658,6 +658,11 @@ cp .env.example .env
 docker compose up --build api
 ```
 
+Open [http://localhost:8000](http://localhost:8000) for the local simulation
+console. The console is included in the API image; it uses the same
+deterministic conversation endpoint as the documented curl example and does
+not add a browser build step, external model download, or persistent storage.
+
 Run the complete validation workflow without installing Python dependencies on
 the host:
 

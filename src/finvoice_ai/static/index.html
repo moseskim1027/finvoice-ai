@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Local FinVoice AI portfolio simulation">
+    <title>FinVoice AI — Local Simulation</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="FinVoice AI home"><span class="brand-mark">F</span> FinVoice <em>AI</em></a>
+        <span class="environment"><i></i> LOCAL SIMULATION</span>
+      </header>
+
+      <section class="hero">
+        <p class="eyebrow">SAFE FINANCIAL-SUPPORT RESEARCH</p>
+        <h1>See the decision<br><span>before the answer.</span></h1>
+        <p class="lede">A small, inspectable support-agent simulation: grounded answers, explicit safety handoffs, and no real customer or bank data.</p>
+      </section>
+
+      <section class="workspace" aria-label="Conversation simulation">
+        <div class="conversation-card">
+          <div class="card-heading"><div><p class="eyebrow">CONVERSATION</p><h2>Support console</h2></div><button id="reset" class="quiet-button" type="button">Reset</button></div>
+          <div id="messages" class="messages" aria-live="polite">
+            <div class="message agent"><span class="avatar">F</span><div><p>Welcome. Choose a scenario or ask about an approved help topic.</p><small>Local template model · no data retained</small></div></div>
+          </div>
+          <div class="composer">
+            <label for="confidence">Simulated confidence <output id="confidence-value">0.91</output></label>
+            <input id="confidence" type="range" min="0" max="1" step="0.01" value="0.91">
+            <form id="conversation-form">
+              <input id="message-input" maxlength="4000" autocomplete="off" placeholder="Try: How do I reset my PIN?" aria-label="Support request">
+              <button class="send-button" type="submit">Send <span>↗</span></button>
+            </form>
+          </div>
+        </div>
+
+        <aside class="inspector" aria-label="Decision inspector">
+          <div class="card-heading"><div><p class="eyebrow">DECISION TRACE</p><h2>Inspectable by design</h2></div><span id="status-dot" class="status-dot"></span></div>
+          <div id="empty-state" class="empty-state"><div class="trace-icon">⌁</div><p>Run a scenario to inspect the retrieval, policy, and response path.</p></div>
+          <div id="trace" class="trace hidden">
+            <div class="decision-row"><span>Outcome</span><strong id="decision">—</strong></div>
+            <div class="decision-row"><span>Reason</span><strong id="reason">—</strong></div>
+            <div class="decision-row"><span>Model</span><strong id="model">—</strong></div>
+            <div class="decision-row"><span>Sources checked</span><strong id="sources">—</strong></div>
+            <div class="confidence-readout"><div><span>Response confidence</span><strong id="response-confidence">—</strong></div><div class="bar"><i id="confidence-bar"></i></div></div>
+            <div id="citations" class="citations"></div>
+            <p id="request-id" class="request-id"></p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="scenarios" aria-label="Demo scenarios">
+        <div><p class="eyebrow">GUIDED DEMOS</p><h2>Exercise the safety boundary</h2></div>
+        <div class="scenario-grid">
+          <button class="scenario" data-message="How do I reset my PIN?" data-confidence="0.91"><b>01</b><span><strong>Grounded answer</strong><small>Approved guidance + citation</small></span><i>↗</i></button>
+          <button class="scenario" data-message="I need help with something" data-confidence="0.42"><b>02</b><span><strong>Low confidence</strong><small>Safe human escalation</small></span><i>↗</i></button>
+          <button class="scenario" data-message="Please transfer money to another account" data-confidence="0.99"><b>03</b><span><strong>Sensitive request</strong><small>Policy-protected handoff</small></span><i>↗</i></button>
+        </div>
+      </section>
+
+      <footer><span>Portfolio / research environment</span><span>Deterministic local providers · In-memory telemetry</span></footer>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
