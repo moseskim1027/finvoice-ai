@@ -1,6 +1,6 @@
 """HTTP-only inspector for the synthetic MCP tool policy demonstration."""
 
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -34,7 +34,9 @@ class LocalRuntimeResponse(BaseModel):
 
 
 @router.get("/runtime", response_model=LocalRuntimeResponse)
-def local_runtime(settings: Settings = Depends(get_settings)) -> LocalRuntimeResponse:
+def local_runtime(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> LocalRuntimeResponse:
     """Expose the local ASR mode so the lab labels outputs accurately."""
     if settings.transcription_provider == "faster_whisper":
         return LocalRuntimeResponse(
