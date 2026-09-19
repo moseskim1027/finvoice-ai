@@ -22,6 +22,13 @@ def test_demo_console_is_available() -> None:
     assert "/static/app.js" in response.text
 
 
+def test_model_lab_is_available() -> None:
+    response = client.get("/lab")
+
+    assert response.status_code == 200
+    assert "Model Lab" in response.text
+
+
 def test_demo_tool_inspector_enforces_confirmation() -> None:
     denied = client.post(
         "/v1/demo/tools/create_demo_support_ticket",

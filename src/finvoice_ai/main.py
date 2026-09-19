@@ -43,6 +43,11 @@ def create_app() -> FastAPI:
         """Serve the local-only portfolio simulation console."""
         return FileResponse("src/finvoice_ai/static/index.html")
 
+    @application.get("/lab", include_in_schema=False)
+    def model_lab() -> FileResponse:
+        """Serve the separate local-model evaluation workspace."""
+        return FileResponse("src/finvoice_ai/static/lab.html")
+
     application.state.streaming_manager = StreamingSessionManager(
         lambda: OfflineStreamingTranscriptionAdapter(build_transcription_provider(settings)),
         metrics=BoundedStreamingMetrics(),

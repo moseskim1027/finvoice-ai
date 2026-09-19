@@ -663,6 +663,11 @@ console. The console is included in the API image; it uses the same
 deterministic conversation endpoint as the documented curl example and does
 not add a browser build step, external model download, or persistent storage.
 `make demo` is a shorthand for this containerized local experience.
+The separate [Model Lab](http://localhost:8000/lab) keeps local audio/model
+evaluation distinct from the deterministic support-console walkthrough. It
+accepts a supported WAV fixture or records microphone audio, converts browser
+recordings to 16 kHz mono PCM WAV locally, and displays the API's VAD and
+transcription evidence.
 
 Below the conversation console, the guided component cards exercise three
 existing local interfaces: generated synthetic PCM WAV sent to
