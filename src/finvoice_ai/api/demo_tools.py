@@ -2,9 +2,10 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from finvoice_ai.config import Settings, get_settings
 from finvoice_ai.tools.authorization import ToolAuthorizationError
 from finvoice_ai.tools.demo_tools import DemoSupportRepository, build_demo_tool_definitions
 from finvoice_ai.tools.gateway import ToolGateway, UnknownToolError
@@ -24,6 +25,28 @@ class DemoToolResponse(BaseModel):
     audit_id: str
     outcome: str
     content: dict[str, Any]
+
+
+class LocalRuntimeResponse(BaseModel):
+    transcription_provider: str
+    model: str
+    output_mode: str
+
+
+@router.get("/runtime", response_model=LocalRuntimeResponse)
+def local_runtime(settings: Settings = Depends(get_settings)) -> LocalRuntimeResponse:
+    """Expose the local ASR mode so the lab labels outputs accurately."""
+    if settings.transcription_provider == "faster_whisper":
+        return LocalRuntimeResponse(
+            transcription_provider="faster_whisper",
+            model=f"faster-whisper/{settings.whisper_model_size}",
+            output_mode="local model inference",
+        )
+    return LocalRuntimeResponse(
+        transcription_provider="deterministic",
+        model="deterministic-transcription-v1",
+        output_mode="repeatable contract fixture",
+    )
 
 
 @router.post("/tools/{tool_name}", response_model=DemoToolResponse)

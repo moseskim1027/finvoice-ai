@@ -29,6 +29,13 @@ def test_model_lab_is_available() -> None:
     assert "Model Lab" in response.text
 
 
+def test_local_runtime_discloses_deterministic_mode() -> None:
+    response = client.get("/v1/demo/runtime")
+
+    assert response.status_code == 200
+    assert response.json()["output_mode"] == "repeatable contract fixture"
+
+
 def test_demo_tool_inspector_enforces_confirmation() -> None:
     denied = client.post(
         "/v1/demo/tools/create_demo_support_ticket",
