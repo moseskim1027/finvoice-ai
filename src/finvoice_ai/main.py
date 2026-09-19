@@ -40,6 +40,7 @@ def create_app() -> FastAPI:
     def demo_console() -> FileResponse:
         """Serve the local-only portfolio simulation console."""
         return FileResponse("src/finvoice_ai/static/index.html")
+
     application.state.streaming_manager = StreamingSessionManager(
         lambda: OfflineStreamingTranscriptionAdapter(build_transcription_provider(settings)),
         metrics=BoundedStreamingMetrics(),
