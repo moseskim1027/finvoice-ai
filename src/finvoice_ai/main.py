@@ -2,6 +2,8 @@ import logging
 import time
 
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from finvoice_ai import __version__
 from finvoice_ai.api.routes import router
@@ -32,6 +34,13 @@ def create_app() -> FastAPI:
     )
     application.include_router(router)
     application.include_router(streaming_router)
+    application.mount("/static", StaticFiles(directory="src/finvoice_ai/static"), name="static")
+
+    @application.get("/", include_in_schema=False)
+    def demo_console() -> FileResponse:
+        """Serve the local-only portfolio simulation console."""
+        return FileResponse("src/finvoice_ai/static/index.html")
+
     application.state.streaming_manager = StreamingSessionManager(
         lambda: OfflineStreamingTranscriptionAdapter(build_transcription_provider(settings)),
         metrics=BoundedStreamingMetrics(),

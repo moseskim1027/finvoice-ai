@@ -1,4 +1,4 @@
-.PHONY: audit-speech evaluate-retrieval evaluate-speech format lint observable-stack production-evidence research-baselines run run-mcp test
+.PHONY: audit-speech demo evaluate-retrieval evaluate-speech format lint observable-stack production-evidence research-baselines run run-mcp test
 
 SPEECH_MANIFEST ?= data/speech-manifest.json
 SPEECH_DATASET_ROOT ?= data
@@ -26,6 +26,9 @@ lint:
 	ruff format --check .
 
 observable-stack:
+	docker compose up --build api
+
+demo:
 	docker compose up --build api
 
 production-evidence:
